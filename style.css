@@ -1015,6 +1015,7 @@ input, textarea, select { font-family: var(--font-body); outline: none; }
 @media (max-width: 1200px) {
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
   .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .page-content { padding: var(--space-5); }
 }
 
 @media (max-width: 1024px) {
@@ -1030,6 +1031,7 @@ input, textarea, select { font-family: var(--font-body); outline: none; }
 }
 
 @media (max-width: 768px) {
+  html { font-size: 15px; }
   .grid-3 { grid-template-columns: repeat(2, 1fr); }
   .grid-2 { grid-template-columns: 1fr; }
   .form-row { grid-template-columns: 1fr; }
@@ -1039,19 +1041,25 @@ input, textarea, select { font-family: var(--font-body); outline: none; }
   .topbar-location { display: none; }
   .auth-card { padding: var(--space-6) var(--space-5); }
   .chatbot-panel { width: calc(100vw - 44px); right: 22px; bottom: 82px; max-height: 440px; }
+  .card { padding: var(--space-5); }
 }
 
 @media (max-width: 560px) {
+  html { font-size: 14px; }
   .grid-3 { grid-template-columns: 1fr; }
   .grid-4 { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr 1fr; }
-  .hero-cta { flex-direction: column; width: fit-content; }
+  .hero-cta { flex-direction: column; width: fit-content; margin: 0 auto; }
   .tabs { flex-wrap: wrap; }
   .chatbot-trigger { bottom: 20px; right: 18px; width: 50px; height: 50px; }
   .landing-section { padding: var(--space-10) var(--space-4); }
+  .forecast-strip { gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; }
+  .forecast-day { flex: 1 0 auto; min-width: 60px; }
 }
 
 @media (max-width: 400px) {
+  html { font-size: 13px; }
   .stats-row { grid-template-columns: 1fr; }
   .auth-card { padding: var(--space-5) var(--space-4); }
+  .topbar-actions { gap: var(--space-2); }
 }
