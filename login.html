@@ -1,0 +1,1128 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login — Solar Yield Detector</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ===== AUTH PAGE LAYOUT ===== */
+    * { box-sizing: border-box; }
+
+    .auth-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      padding: 2rem 1rem;
+      background: var(--bg-base);
+    }
+
+    /* Background Orbs */
+    .auth-bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      pointer-events: none;
+      animation: orbFloat 12s ease-in-out infinite;
+      z-index: 0;
+    }
+    .auth-bg-orb-1 {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(245,158,11,0.2) 0%, transparent 70%);
+      top: -150px; left: -100px;
+      animation-duration: 14s;
+    }
+    .auth-bg-orb-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(59,130,246,0.16) 0%, transparent 70%);
+      bottom: -100px; right: -80px;
+      animation-duration: 10s;
+      animation-delay: -4s;
+    }
+    .auth-bg-orb-3 {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(16,185,129,0.13) 0%, transparent 70%);
+      top: 50%; left: 60%;
+      animation-duration: 16s;
+      animation-delay: -8s;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      33% { transform: translateY(-28px) scale(1.04); }
+      66% { transform: translateY(16px) scale(0.97); }
+    }
+
+    /* ===== AUTH CARD ===== */
+    .auth-card {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem 2.5rem 2rem;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+      animation: fadeInUp 0.7s cubic-bezier(0.22,1,0.36,1) both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* Theme toggle — absolute top-right */
+    .auth-theme-toggle {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+    }
+
+    /* Logo Row */
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+      justify-content: center;
+    }
+    .auth-logo-mark {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, var(--solar), #f97316);
+      border-radius: 12px;
+      display: grid; place-items: center;
+      font-size: 1.25rem;
+      box-shadow: 0 0 20px rgba(245,158,11,0.4);
+      flex-shrink: 0;
+    }
+    .auth-logo-name {
+      font-family:var(--font-heading);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .auth-logo-name small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      font-family:var(--font-body);
+    }
+
+    /* ===== TABS ===== */
+    .auth-tabs {
+      display: flex;
+      background: var(--bg-base);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 4px;
+      margin-bottom: 2rem;
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-family:var(--font-body);
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 9px;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
+    }
+    .auth-tab-btn.active {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-weight: 600;
+    }
+
+    /* ===== FORM PANELS ===== */
+    .auth-panel { display: none; }
+    .auth-panel.active { display: block; animation: panelIn 0.3s ease both; }
+    @keyframes panelIn {
+      from { opacity: 0; transform: translateX(12px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* Panel heading */
+    .auth-panel-title {
+      font-family:var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.35rem;
+    }
+    .auth-panel-sub {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+
+    /* ===== INPUT GROUP ===== */
+    .input-group {
+      position: relative;
+      margin-bottom: 1.1rem;
+    }
+    .input-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.4rem;
+      font-family:var(--font-body);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .input-icon-wrap {
+      position: relative;
+    }
+    .input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .input-icon-wrap input,
+    .input-icon-wrap select {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.75rem;
+      background: var(--bg-base);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family:var(--font-body);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-icon-wrap input:focus,
+    .input-icon-wrap select:focus {
+      border-color: var(--solar);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .input-icon-wrap input::placeholder { color: var(--text-muted); }
+    .input-no-icon {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--bg-base);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family:var(--font-body);
+      font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .input-no-icon:focus {
+      border-color: var(--solar);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+
+    /* Password toggle */
+    .pw-toggle {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+    .pw-toggle:hover { color: var(--text-secondary); }
+
+    /* ===== REMEMBER / FORGOT ROW ===== */
+    .auth-extra-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      font-size: 0.83rem;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family:var(--font-body);
+    }
+    .checkbox-label input[type="checkbox"] {
+      accent-color: var(--solar);
+      width: 15px; height: 15px;
+    }
+    .forgot-link {
+      color: var(--solar);
+      text-decoration: none;
+      font-weight: 500;
+      font-family:var(--font-body);
+    }
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* ===== FULL-WIDTH BTN ===== */
+    .btn-full {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      border: none;
+      font-family:var(--font-heading);
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-full:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-full:active { transform: none; }
+
+    /* ===== DEMO HINT ===== */
+    .demo-hint {
+      margin-top: 1.25rem;
+      padding: 0.75rem 1rem;
+      background: rgba(245,158,11,0.07);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: 10px;
+      text-align: center;
+    }
+    .demo-hint p {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-family:var(--font-body);
+    }
+    .demo-hint strong {
+      color: var(--solar);
+      font-weight: 600;
+    }
+    .demo-hint button {
+      background: none;
+      border: none;
+      color: var(--solar);
+      font-size: 0.78rem;
+      font-family:var(--font-body);
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      margin-top: 0.3rem;
+    }
+
+    /* ===== STEP INDICATOR ===== */
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+    .step-dot-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      flex-shrink: 0;
+    }
+    .step-dot {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: var(--bg-base);
+      border: 2px solid var(--border);
+      display: grid; place-items: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-family:var(--font-heading);
+      transition: background 0.3s, border-color 0.3s, color 0.3s;
+    }
+    .step-dot.active {
+      background: var(--solar);
+      border-color: var(--solar);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(245,158,11,0.4);
+    }
+    .step-dot.done {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      margin: 0 0.5rem;
+      margin-bottom: 1.4rem;
+      transition: background 0.3s;
+    }
+    .step-line.done { background: var(--success); }
+    .step-label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: center;
+      font-family:var(--font-body);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+    .step-dot.active + .step-label,
+    .step-dot.done + .step-label { color: var(--text-secondary); }
+
+    /* Step containers */
+    .reg-step { display: none; }
+    .reg-step.active { display: block; animation: stepIn 0.3s ease both; }
+    @keyframes stepIn {
+      from { opacity: 0; transform: translateX(16px); }
+      to { opacity: 1; transform: none; }
+    }
+
+    /* Step title */
+    .step-form-title {
+      font-family:var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+    .step-form-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.5rem;
+      font-family:var(--font-body);
+    }
+
+    /* GPS Button */
+    .gps-btn {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      background: rgba(59,130,246,0.08);
+      border: 1.5px dashed rgba(59,130,246,0.35);
+      border-radius: 10px;
+      color: #60a5fa;
+      font-family:var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      margin-bottom: 1.1rem;
+    }
+    .gps-btn:hover:not(:disabled) {
+      background: rgba(59,130,246,0.14);
+      border-color: rgba(59,130,246,0.55);
+    }
+    .gps-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Two-col grid */
+    .input-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.85rem;
+    }
+
+    /* Nav buttons row */
+    .step-nav-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .step-nav-row .btn-back {
+      flex: 0 0 auto;
+      padding: 0.75rem 1.25rem;
+      background: var(--bg-base);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-secondary);
+      font-family:var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .step-nav-row .btn-back:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+    .step-nav-row .btn-next { flex: 1; }
+
+    /* Error message */
+    .auth-error {
+      color: #ef4444;
+      font-size: 0.8rem;
+      font-family:var(--font-body);
+      margin-top: 0.5rem;
+      display: none;
+      padding: 0.5rem 0.75rem;
+      background: rgba(239,68,68,0.08);
+      border-radius: 8px;
+      border: 1px solid rgba(239,68,68,0.2);
+    }
+    .auth-error.show { display: block; }
+
+    /* Back to home */
+    .auth-back-home {
+      position: fixed;
+      top: 1.5rem;
+      left: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-family:var(--font-body);
+      font-weight: 500;
+      padding: 0.45rem 0.9rem;
+      border-radius: 8px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+      z-index: 10;
+    }
+    .auth-back-home:hover {
+      color: var(--text-primary);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    /* Divider */
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 1.25rem 0;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-family:var(--font-body);
+    }
+    .auth-divider::before, .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Select arrow */
+    .input-icon-wrap select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+    .select-no-icon {
+      width: 100%;
+      padding: 0.75rem 2.5rem 0.75rem 1rem;
+      background: var(--bg-base);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-family:var(--font-body);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+    }
+    .select-no-icon:focus {
+      border-color: var(--solar);
+      box-shadow: 0 0 0 3px rgba(245,158,11,0.15);
+    }
+    .select-no-icon option { background: var(--bg-card); }
+
+    /* Loading spinner in button */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .btn-spinner {
+      display: inline-block;
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @media (max-width: 520px) {
+      .auth-card { padding: 2rem 1.5rem 1.75rem; }
+      .input-row-2 { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Back to Home -->
+  <a href="index.html" class="auth-back-home">← Home</a>
+
+  <!-- Background orbs -->
+  <div class="auth-bg-orb auth-bg-orb-1"></div>
+  <div class="auth-bg-orb auth-bg-orb-2"></div>
+  <div class="auth-bg-orb auth-bg-orb-3"></div>
+
+  <div class="auth-page">
+    <div class="auth-card fade-in">
+
+      <!-- Theme toggle -->
+      <div class="auth-theme-toggle">
+        <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+          <div class="theme-toggle-track"><div class="theme-toggle-thumb"></div></div>
+          <span class="theme-icon theme-icon-moon">🌙</span>
+          <span class="theme-icon theme-icon-sun" style="display:none">☀️</span>
+        </button>
+      </div>
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <div class="auth-logo-mark">☀️</div>
+        <div class="auth-logo-name">
+          Solar Yield Detector
+          <small>AI-Powered Solar Monitoring</small>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" id="tab-login" onclick="switchTab('login')">🔑 Login</button>
+        <button class="auth-tab-btn" id="tab-register" onclick="switchTab('register')">✨ Register</button>
+      </div>
+
+      <!-- ===== LOGIN PANEL ===== -->
+      <div class="auth-panel active" id="panel-login">
+        <h2 class="auth-panel-title">Welcome back! 👋</h2>
+        <p class="auth-panel-sub">Sign in to access your solar dashboard and real-time insights.</p>
+
+        <div class="input-group">
+          <label for="login-email">Email Address</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">📧</span>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email" />
+          </div>
+        </div>
+
+        <div class="input-group">
+          <label for="login-password">Password</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password" />
+            <button class="pw-toggle" onclick="togglePassword('login-password', this)" title="Show/hide password">👁️</button>
+          </div>
+        </div>
+
+        <div class="auth-extra-row">
+          <label class="checkbox-label">
+            <input type="checkbox" id="remember-me" />
+            Remember me
+          </label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+
+        <div id="login-error" class="auth-error">❌ Invalid email or password. Please try again.</div>
+
+        <button class="btn btn-primary btn-full" id="login-btn" onclick="handleLogin()">
+          Sign In →
+        </button>
+
+        <div class="demo-hint">
+          <p>🧪 Try the demo account:</p>
+          <p><strong>demo@solar.com</strong> / <strong>password123</strong></p>
+          <button onclick="fillDemo()">Auto-fill demo credentials</button>
+        </div>
+      </div>
+
+      <!-- ===== REGISTER PANEL ===== -->
+      <div class="auth-panel" id="panel-register">
+
+        <!-- Step indicator -->
+        <div class="step-indicator" id="step-indicator">
+          <div class="step-dot-wrap">
+            <div class="step-dot active" id="sdot-1">1</div>
+            <div class="step-label">Account</div>
+          </div>
+          <div class="step-line" id="sline-1"></div>
+          <div class="step-dot-wrap">
+            <div class="step-dot" id="sdot-2">2</div>
+            <div class="step-label">Location</div>
+          </div>
+          <div class="step-line" id="sline-2"></div>
+          <div class="step-dot-wrap">
+            <div class="step-dot" id="sdot-3">3</div>
+            <div class="step-label">Panel Info</div>
+          </div>
+        </div>
+
+        <!-- ===== STEP 1: Account ===== -->
+        <div class="reg-step active" id="reg-step-1">
+          <div class="step-form-title">Create your account</div>
+          <div class="step-form-sub">Start your free solar monitoring journey today</div>
+
+          <div class="input-group">
+            <label for="reg-name">Full Name</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">👤</span>
+              <input type="text" id="reg-name" placeholder="Arjun Sharma" autocomplete="name" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="reg-email">Email Address</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">📧</span>
+              <input type="email" id="reg-email" placeholder="arjun@example.com" autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="reg-password">Password</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="reg-password" placeholder="At least 8 characters" autocomplete="new-password" />
+              <button class="pw-toggle" onclick="togglePassword('reg-password', this)" title="Show/hide">👁️</button>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label for="reg-confirm">Confirm Password</label>
+            <div class="input-icon-wrap">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="reg-confirm" placeholder="Repeat password" autocomplete="new-password" />
+              <button class="pw-toggle" onclick="togglePassword('reg-confirm', this)" title="Show/hide">👁️</button>
+            </div>
+          </div>
+
+          <div id="step1-error" class="auth-error"></div>
+
+          <button class="btn btn-primary btn-full" onclick="validateStep1()">
+            Continue → Location
+          </button>
+        </div>
+
+        <!-- ===== STEP 2: Location ===== -->
+        <div class="reg-step" id="reg-step-2">
+          <div class="step-form-title">Where are you located?</div>
+          <div class="step-form-sub">We use your location to fetch accurate solar irradiance data</div>
+
+          <button class="gps-btn" id="gps-btn">📍 Use GPS Location</button>
+
+          <div class="input-row-2">
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-city">City / Town</label>
+              <input class="input-no-icon" type="text" id="reg-city" placeholder="Mumbai" />
+            </div>
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-pincode">PIN Code (6-digit)</label>
+              <input class="input-no-icon" type="text" id="reg-pincode" placeholder="400001" maxlength="6" pattern="[0-9]{6}" />
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top:1.1rem;">
+            <label for="reg-state">State</label>
+            <select class="select-no-icon" id="reg-state">
+              <option value="">— Select State —</option>
+              <option>Andhra Pradesh</option>
+              <option>Arunachal Pradesh</option>
+              <option>Assam</option>
+              <option>Bihar</option>
+              <option>Chhattisgarh</option>
+              <option>Goa</option>
+              <option>Gujarat</option>
+              <option>Haryana</option>
+              <option>Himachal Pradesh</option>
+              <option>Jharkhand</option>
+              <option>Karnataka</option>
+              <option>Kerala</option>
+              <option>Madhya Pradesh</option>
+              <option>Maharashtra</option>
+              <option>Manipur</option>
+              <option>Meghalaya</option>
+              <option>Mizoram</option>
+              <option>Nagaland</option>
+              <option>Odisha</option>
+              <option>Punjab</option>
+              <option>Rajasthan</option>
+              <option>Sikkim</option>
+              <option>Tamil Nadu</option>
+              <option>Telangana</option>
+              <option>Tripura</option>
+              <option>Uttar Pradesh</option>
+              <option>Uttarakhand</option>
+              <option>West Bengal</option>
+              <option>Andaman and Nicobar Islands</option>
+              <option>Chandigarh</option>
+              <option>Dadra and Nagar Haveli and Daman and Diu</option>
+              <option>Delhi</option>
+              <option>Jammu and Kashmir</option>
+              <option>Ladakh</option>
+              <option>Lakshadweep</option>
+              <option>Puducherry</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label>Timezone</label>
+            <input class="input-no-icon" type="text" value="Asia/Kolkata" readonly style="opacity:0.6;cursor:not-allowed;" />
+          </div>
+
+          <div id="step2-error" class="auth-error"></div>
+
+          <div class="step-nav-row">
+            <button class="btn-back" onclick="goStep(1)">← Back</button>
+            <button class="btn btn-primary btn-full btn-next" onclick="validateStep2()">Continue → Panel Info</button>
+          </div>
+        </div>
+
+        <!-- ===== STEP 3: Panel Info ===== -->
+        <div class="reg-step" id="reg-step-3">
+          <div class="step-form-title">Your solar system details</div>
+          <div class="step-form-sub">Help us calculate your yield and ROI accurately</div>
+
+          <div class="input-group">
+            <label for="reg-install-date">Installation Date</label>
+            <input class="input-no-icon" type="date" id="reg-install-date" />
+          </div>
+
+          <div class="input-row-2">
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-panel-size">Panel Size (kWp)</label>
+              <input class="input-no-icon" type="number" id="reg-panel-size" placeholder="5" min="0.5" max="1000" step="0.1" />
+            </div>
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-rate">Electricity Rate (₹/kWh)</label>
+              <input class="input-no-icon" type="number" id="reg-rate" placeholder="8" min="1" max="50" step="0.5" />
+            </div>
+          </div>
+
+          <div class="input-row-2" style="margin-top:1.1rem;">
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-investment">Total Investment (₹)</label>
+              <input class="input-no-icon" type="number" id="reg-investment" placeholder="150000" min="1000" step="1000" />
+            </div>
+            <div class="input-group" style="margin-bottom:0">
+              <label for="reg-efficiency">Efficiency (%)</label>
+              <input class="input-no-icon" type="number" id="reg-efficiency" placeholder="80" min="10" max="100" value="80" />
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top:1.1rem;">
+            <label for="reg-psh">Peak Sun Hours / Day</label>
+            <input class="input-no-icon" type="number" id="reg-psh" placeholder="5" min="1" max="14" step="0.1" value="5" />
+          </div>
+
+          <div id="step3-error" class="auth-error"></div>
+
+          <div class="step-nav-row">
+            <button class="btn-back" onclick="goStep(2)">← Back</button>
+            <button class="btn btn-primary btn-full btn-next" id="create-account-btn" onclick="submitRegistration()">
+              🎉 Create Account
+            </button>
+          </div>
+
+          <div class="demo-hint" style="margin-top:1rem;">
+            <p>🔒 Your data is stored locally and never shared. <br>We use it only to compute your solar yield.</p>
+          </div>
+        </div>
+
+      </div>
+      <!-- /panel-register -->
+
+    </div>
+    <!-- /auth-card -->
+  </div>
+  <!-- /auth-page -->
+
+  <script src="app.js"></script>
+  <script>
+    // ===== TAB SWITCHING =====
+    function switchTab(tab) {
+      document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById('panel-' + tab).classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ===== TOGGLE PASSWORD VISIBILITY =====
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+
+    // ===== FILL DEMO =====
+    function fillDemo() {
+      document.getElementById('login-email').value = 'demo@solar.com';
+      document.getElementById('login-password').value = 'password123';
+    }
+
+    // ===== LOGIN =====
+    function handleLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+
+      errEl.classList.remove('show');
+
+      if (!email || !password) {
+        errEl.textContent = '❌ Please enter your email and password.';
+        errEl.classList.add('show');
+        return;
+      }
+
+      btn.innerHTML = '<span class="btn-spinner"></span> Signing in...';
+      btn.disabled = true;
+
+      setTimeout(() => {
+        // Check if demo credentials
+        const DEMO_EMAIL = 'demo@solar.com';
+        const DEMO_PASSWORD = 'password123';
+
+        // Try to load existing user
+        let user = null;
+        try { user = JSON.parse(localStorage.getItem('syd_user') || 'null'); } catch(e) {}
+
+        let authenticated = false;
+
+        if (user && user.email === email && user.password === password) {
+          authenticated = true;
+        } else if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+          // Auto-create demo user
+          const demoUser = {
+            name: 'Demo User',
+            email: DEMO_EMAIL,
+            password: DEMO_PASSWORD,
+            city: 'Pune',
+            pincode: '411001',
+            state: 'Maharashtra',
+            timezone: 'Asia/Kolkata',
+            installDate: '2023-03-15',
+            panelSize: '5',
+            electricityRate: '8',
+            investment: '150000',
+            efficiency: '80',
+            peakSunHours: '5',
+            lat: 18.5204,
+            lon: 73.8567,
+            createdAt: new Date().toISOString()
+          };
+          if (typeof SYD !== 'undefined' && SYD.AuthManager) {
+            SYD.AuthManager.setUser(demoUser);
+          } else {
+            localStorage.setItem('syd_user', JSON.stringify(demoUser));
+          }
+          authenticated = true;
+        }
+
+        if (authenticated) {
+          btn.innerHTML = '✅ Redirecting...';
+          if (typeof SYD !== 'undefined' && SYD.Toast) {
+            SYD.Toast.show('Welcome back! Loading dashboard...', 'success', 2000);
+          }
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 1200);
+        } else {
+          errEl.textContent = '❌ Invalid email or password. Try: demo@solar.com / password123';
+          errEl.classList.add('show');
+          btn.innerHTML = 'Sign In →';
+          btn.disabled = false;
+        }
+      }, 900);
+    }
+
+    // Allow Enter key to trigger login
+    ['login-email', 'login-password'].forEach(id => {
+      document.getElementById(id)?.addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    });
+
+    // ===== STEP NAVIGATION =====
+    let currentStep = 1;
+
+    function goStep(step) {
+      // Update step dots
+      for (let i = 1; i <= 3; i++) {
+        const dot = document.getElementById('sdot-' + i);
+        dot.classList.remove('active', 'done');
+        if (i < step) dot.classList.add('done'), dot.textContent = '✓';
+        else if (i === step) dot.classList.add('active'), dot.textContent = i;
+        else dot.textContent = i;
+      }
+      // Update lines
+      for (let i = 1; i <= 2; i++) {
+        const line = document.getElementById('sline-' + i);
+        line.classList.toggle('done', i < step);
+      }
+      // Show/hide steps
+      document.querySelectorAll('.reg-step').forEach(s => s.classList.remove('active'));
+      document.getElementById('reg-step-' + step).classList.add('active');
+      currentStep = step;
+    }
+
+    function validateStep1() {
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pw = document.getElementById('reg-password').value;
+      const confirm = document.getElementById('reg-confirm').value;
+      const err = document.getElementById('step1-error');
+
+      err.classList.remove('show');
+
+      if (!name) { showErr(err, '❌ Please enter your full name.'); return; }
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showErr(err, '❌ Please enter a valid email address.'); return; }
+      if (pw.length < 8) { showErr(err, '❌ Password must be at least 8 characters.'); return; }
+      if (pw !== confirm) { showErr(err, '❌ Passwords do not match.'); return; }
+
+      goStep(2);
+    }
+
+    function validateStep2() {
+      const city = document.getElementById('reg-city').value.trim();
+      const pincode = document.getElementById('reg-pincode').value.trim();
+      const state = document.getElementById('reg-state').value;
+      const err = document.getElementById('step2-error');
+      err.classList.remove('show');
+
+      if (!city) { showErr(err, '❌ Please enter your city or town.'); return; }
+      if (!pincode || !/^\d{6}$/.test(pincode)) { showErr(err, '❌ Please enter a valid 6-digit PIN code.'); return; }
+      if (!state) { showErr(err, '❌ Please select your state.'); return; }
+
+      goStep(3);
+      // Set max date for install date to today
+      document.getElementById('reg-install-date').max = new Date().toISOString().split('T')[0];
+    }
+
+    function showErr(el, msg) {
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    // ===== GPS BUTTON =====
+    document.getElementById('gps-btn')?.addEventListener('click', async () => {
+      const btn = document.getElementById('gps-btn');
+      btn.textContent = '🔄 Detecting...';
+      btn.disabled = true;
+      try {
+        if (typeof SYD !== 'undefined' && SYD.Geocoder) {
+          const loc = await SYD.Geocoder.fromGPS();
+          if (loc) {
+            document.getElementById('reg-city').value = loc.city || '';
+            document.getElementById('reg-pincode').value = '';
+            btn.textContent = '✅ ' + (loc.city || 'Location detected');
+            window._regLat = loc.lat;
+            window._regLon = loc.lon;
+          } else {
+            throw new Error('No location');
+          }
+        } else {
+          // Fallback: raw geolocation
+          await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(async pos => {
+              window._regLat = pos.coords.latitude;
+              window._regLon = pos.coords.longitude;
+              btn.textContent = '✅ Location detected (' + pos.coords.latitude.toFixed(2) + ', ' + pos.coords.longitude.toFixed(2) + ')';
+              resolve();
+            }, reject, { timeout: 10000 });
+          });
+        }
+      } catch(e) {
+        if (typeof SYD !== 'undefined' && SYD.Toast) {
+          SYD.Toast.show('Could not get GPS location. Please enter manually.', 'warning');
+        }
+        btn.textContent = '📍 Use GPS Location';
+      }
+      btn.disabled = false;
+    });
+
+    // ===== REGISTRATION SUBMIT =====
+    async function submitRegistration() {
+      const err = document.getElementById('step3-error');
+      const btn = document.getElementById('create-account-btn');
+      err.classList.remove('show');
+
+      const installDate = document.getElementById('reg-install-date').value;
+      const panelSize = document.getElementById('reg-panel-size').value;
+      const rate = document.getElementById('reg-rate').value;
+      const investment = document.getElementById('reg-investment').value;
+
+      if (!installDate) { showErr(err, '❌ Please select your installation date.'); return; }
+      if (!panelSize || parseFloat(panelSize) <= 0) { showErr(err, '❌ Please enter a valid panel system size.'); return; }
+      if (!rate || parseFloat(rate) <= 0) { showErr(err, '❌ Please enter your electricity rate.'); return; }
+      if (!investment || parseFloat(investment) <= 0) { showErr(err, '❌ Please enter your total investment.'); return; }
+
+      btn.innerHTML = '<span class="btn-spinner"></span> Creating account...';
+      btn.disabled = true;
+
+      const userData = {
+        name: document.getElementById('reg-name').value.trim(),
+        email: document.getElementById('reg-email').value.trim(),
+        password: document.getElementById('reg-password').value,
+        city: document.getElementById('reg-city').value.trim(),
+        pincode: document.getElementById('reg-pincode').value.trim(),
+        state: document.getElementById('reg-state').value,
+        timezone: 'Asia/Kolkata',
+        installDate: installDate,
+        panelSize: panelSize,
+        electricityRate: rate,
+        investment: investment,
+        efficiency: document.getElementById('reg-efficiency').value || '80',
+        peakSunHours: document.getElementById('reg-psh').value || '5',
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        // Geocode city+pincode to get lat/lon if GPS not used
+        if (!window._regLat && userData.pincode) {
+          if (typeof SYD !== 'undefined' && SYD.Geocoder) {
+            const geo = await SYD.Geocoder.fromPincode(userData.pincode);
+            if (geo) {
+              userData.lat = geo.lat;
+              userData.lon = geo.lon;
+              userData.city = geo.city || userData.city;
+            }
+          }
+        } else if (window._regLat) {
+          userData.lat = window._regLat;
+          userData.lon = window._regLon;
+        }
+      } catch(e) {
+        // geocoding failed, continue without coords
+      }
+
+      // Save user
+      if (typeof SYD !== 'undefined' && SYD.AuthManager) {
+        SYD.AuthManager.setUser(userData);
+      } else {
+        localStorage.setItem('syd_user', JSON.stringify(userData));
+      }
+
+      if (typeof SYD !== 'undefined' && SYD.Toast) {
+        SYD.Toast.show('🎉 Account created! Redirecting to dashboard...', 'success', 2000);
+      }
+
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
+    }
+
+    // Allow Enter to proceed on step inputs
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        if (currentStep === 1 && document.getElementById('panel-register').classList.contains('active')) {
+          validateStep1();
+        } else if (currentStep === 2 && document.getElementById('panel-register').classList.contains('active')) {
+          validateStep2();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

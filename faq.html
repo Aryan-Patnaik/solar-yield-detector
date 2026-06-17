@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQs &amp; Help — Solar Yield Detector</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ── FAQ-specific styles ── */
+    .faq-hero {
+      background: linear-gradient(135deg, rgba(245,158,11,0.06) 0%, rgba(59,130,246,0.05) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-2xl);
+      padding: var(--space-10) var(--space-8);
+      text-align: center;
+      margin-bottom: var(--space-8);
+      position: relative;
+      overflow: hidden;
+    }
+    .faq-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.08) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .faq-hero-icon {
+      font-size: 3rem; margin-bottom: var(--space-4); line-height: 1;
+      animation: floatOrb 4s ease-in-out infinite;
+    }
+    .faq-hero h1 {
+      font-family: var(--font-heading); font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 800; margin-bottom: var(--space-3);
+    }
+    .faq-hero p {
+      color: var(--text-secondary); font-size: 0.95rem; max-width: 520px;
+      margin: 0 auto var(--space-6);
+    }
+    .faq-search-wrap {
+      max-width: 540px; margin: 0 auto; position: relative; z-index: 1;
+    }
+    .faq-search-wrap .search-icon {
+      position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+      font-size: 1rem; color: var(--text-muted); pointer-events: none;
+    }
+    .faq-search-wrap input {
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-full); padding: 14px 20px 14px 48px;
+      color: var(--text-primary); font-size: 0.95rem;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      box-shadow: var(--shadow-md);
+    }
+    .faq-search-wrap input:focus {
+      outline: none; border-color: var(--solar);
+      box-shadow: 0 0 0 4px rgba(245,158,11,0.1), var(--shadow-md);
+    }
+    .faq-search-wrap input::placeholder { color: var(--text-muted); }
+
+    /* Category tabs */
+    .faq-tabs {
+      display: flex; gap: var(--space-2); flex-wrap: wrap;
+      margin-bottom: var(--space-6); padding: var(--space-2);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-xl); width: fit-content;
+    }
+    .faq-tab {
+      padding: 8px 18px; border-radius: var(--radius-lg);
+      background: none; border: none; font-size: 0.85rem; font-weight: 600;
+      color: var(--text-secondary); cursor: pointer;
+      transition: all var(--transition-fast); white-space: nowrap;
+    }
+    .faq-tab.active {
+      background: var(--gradient-solar); color: #fff;
+      box-shadow: 0 3px 12px rgba(245,158,11,0.3);
+    }
+    .faq-tab:hover:not(.active) { color: var(--text-primary); background: var(--bg-secondary); }
+
+    /* Category label */
+    .faq-category-header {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin-bottom: var(--space-4); padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--border);
+    }
+    .faq-category-icon { font-size: 1.4rem; }
+    .faq-category-title {
+      font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700;
+    }
+    .faq-category-count {
+      margin-left: auto; background: rgba(245,158,11,0.1); color: var(--solar);
+      border-radius: var(--radius-full); padding: 2px 10px; font-size: 0.75rem; font-weight: 700;
+    }
+
+    /* Accordion enhancements */
+    .accordion-item { border-left: 3px solid transparent; transition: border-color var(--transition-fast), box-shadow var(--transition-fast); }
+    .accordion-item.open { border-left-color: var(--solar); }
+    .accordion-item:hover { box-shadow: var(--shadow-sm); }
+
+    /* Answer content formatting */
+    .faq-answer p { margin-bottom: var(--space-3); }
+    .faq-answer p:last-child { margin-bottom: 0; }
+    .faq-answer ul { padding-left: var(--space-5); margin-top: var(--space-2); }
+    .faq-answer ul li { margin-bottom: var(--space-2); }
+    .faq-answer strong { color: var(--text-primary); }
+    .faq-answer .tip-box {
+      background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-3); font-size: 0.83rem;
+    }
+    .faq-answer .info-box {
+      background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.2);
+      border-radius: var(--radius-md); padding: var(--space-3) var(--space-4);
+      margin-top: var(--space-3); font-size: 0.83rem;
+    }
+
+    /* No results */
+    #no-results {
+      text-align: center; padding: var(--space-12) 0;
+      color: var(--text-muted); display: none;
+    }
+    #no-results .no-results-icon { font-size: 3rem; margin-bottom: var(--space-4); opacity: 0.5; }
+
+    /* Category sections */
+    .faq-category-section { margin-bottom: var(--space-8); }
+
+    /* Still need help CTA */
+    .help-cta-card {
+      background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(249,115,22,0.05) 100%);
+      border: 1px solid rgba(245,158,11,0.2);
+      border-radius: var(--radius-2xl); padding: var(--space-10);
+      text-align: center; margin-top: var(--space-10);
+      position: relative; overflow: hidden;
+    }
+    .help-cta-card::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 50% 100%, rgba(245,158,11,0.07) 0%, transparent 70%);
+    }
+    .help-cta-icon { font-size: 3rem; margin-bottom: var(--space-4); }
+    .help-cta-card h2 {
+      font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; margin-bottom: var(--space-3);
+    }
+    .help-cta-card p { color: var(--text-secondary); max-width: 440px; margin: 0 auto var(--space-6); font-size: 0.92rem; }
+    .help-cta-btns { display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap; position: relative; }
+
+    /* Stats strip above FAQs */
+    .faq-stats {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-4);
+      margin-bottom: var(--space-8);
+    }
+    .faq-stat {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-4);
+      text-align: center;
+    }
+    .faq-stat-val { font-family: var(--font-heading); font-size: 1.6rem; font-weight: 800; color: var(--solar); }
+    .faq-stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+    @media (max-width: 768px) {
+      .faq-stats { grid-template-columns: repeat(2, 1fr); }
+      .faq-hero { padding: var(--space-8) var(--space-5); }
+    }
+    @media (max-width: 500px) {
+      .faq-stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">☀️</div>
+        <span class="sidebar-brand">Solar Yield</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="irradiance.html" class="nav-item">
+          <span class="nav-icon">☀️</span>
+          <span class="nav-label">Irradiance</span>
+        </a>
+        <a href="ml-prediction.html" class="nav-item">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-label">ML Prediction</span>
+        </a>
+        <a href="roi-calculator.html" class="nav-item">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">ROI Calculator</span>
+        </a>
+        <div class="nav-section-label">Help</div>
+        <a href="faq.html" class="nav-item active">
+          <span class="nav-icon">❓</span>
+          <span class="nav-label">FAQs</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sidebar-collapse-btn nav-item">
+          <span class="nav-icon collapse-icon">‹</span>
+          <span class="nav-label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ═══════════════════════════════ MAIN CONTENT ═══════════════════════════════ -->
+    <div class="main-content" id="main-content">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <button class="topbar-hamburger" id="topbar-hamburger">☰</button>
+        <span class="topbar-title">FAQs &amp; Help</span>
+        <div class="topbar-spacer"></div>
+        <div class="topbar-actions">
+          <div class="topbar-location user-location-display">📍 Location</div>
+          <button class="theme-toggle" data-theme-toggle>
+            <div class="theme-toggle-track">
+              <div class="theme-toggle-thumb"></div>
+            </div>
+            <span class="theme-icon theme-icon-moon">🌙</span>
+            <span class="theme-icon theme-icon-sun" style="display:none">☀️</span>
+          </button>
+          <div class="user-avatar" title="Profile">U</div>
+        </div>
+      </div>
+
+      <!-- PAGE CONTENT -->
+      <div class="page-content">
+
+        <!-- ─── A. HERO + SEARCH ─── -->
+        <div class="faq-hero fade-in">
+          <div class="faq-hero-icon">❓</div>
+          <h1>How can we help you?</h1>
+          <p>Search our knowledge base or browse categories below. We have answers to 25+ common questions about solar yield, maintenance, weather impacts, and more.</p>
+          <div class="faq-search-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="faq-search" placeholder="Search FAQs… e.g. 'clean panels', 'inverter error', 'cloud cover'" autocomplete="off" />
+          </div>
+        </div>
+
+        <!-- Stats Strip -->
+        <div class="faq-stats fade-in fade-in-delay-1">
+          <div class="faq-stat">
+            <div class="faq-stat-val">25+</div>
+            <div class="faq-stat-label">Answered Questions</div>
+          </div>
+          <div class="faq-stat">
+            <div class="faq-stat-val">5</div>
+            <div class="faq-stat-label">Categories</div>
+          </div>
+          <div class="faq-stat">
+            <div class="faq-stat-val">24/7</div>
+            <div class="faq-stat-label">SolarBot Support</div>
+          </div>
+          <div class="faq-stat">
+            <div class="faq-stat-val">99%</div>
+            <div class="faq-stat-label">Issues Resolved</div>
+          </div>
+        </div>
+
+        <!-- ─── B. CATEGORY TABS ─── -->
+        <div class="faq-tabs fade-in fade-in-delay-2">
+          <button class="faq-tab active" data-cat="all">🔍 All</button>
+          <button class="faq-tab" data-cat="troubleshooting">🔧 Troubleshooting</button>
+          <button class="faq-tab" data-cat="weather">🌦️ Weather Impact</button>
+          <button class="faq-tab" data-cat="maintenance">🧹 Maintenance</button>
+          <button class="faq-tab" data-cat="warranty">📋 Warranty</button>
+          <button class="faq-tab" data-cat="getting-started">🚀 Getting Started</button>
+        </div>
+
+        <!-- No results message -->
+        <div id="no-results">
+          <div class="no-results-icon">🔍</div>
+          <p style="font-size:1rem;font-weight:600;color:var(--text-primary);margin-bottom:6px;">No results found</p>
+          <p>Try different keywords or <button style="background:none;border:none;color:var(--solar);font-weight:600;cursor:pointer;padding:0;" onclick="clearSearch()">clear search</button> to browse all FAQs.</p>
+        </div>
+
+        <!-- ─── C. FAQ ITEMS ─── -->
+
+        <!-- ══ TROUBLESHOOTING ══ -->
+        <div class="faq-category-section scroll-reveal" data-category="troubleshooting">
+          <div class="faq-category-header">
+            <span class="faq-category-icon">🔧</span>
+            <span class="faq-category-title">Troubleshooting</span>
+            <span class="faq-category-count">6 answers</span>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">Why has my solar yield dropped suddenly?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>A sudden drop in solar yield is one of the most common concerns and usually has a straightforward cause. The most frequent culprits are <strong>dust or soiling</strong> on panels — even a thin layer can reduce output by 10–25% in dry, dusty regions like northern India.</p>
+                <p>Other causes include <strong>increased cloud cover or fog</strong>, partial shading from a newly grown tree or a neighbouring structure, an inverter fault or communication error, or a loose DC connector (MC4) in your wiring.</p>
+                <div class="tip-box">
+                  💡 <strong>Quick check:</strong> Compare your current yield with the same day last week. If it's more than 15% lower and the weather is clear, check your inverter error codes and inspect panels for soiling.
+                </div>
+                <p>Head to the <strong>ML Prediction</strong> page to compare your current generation against the AI-estimated baseline, and the <strong>Irradiance</strong> page to check if solar radiation levels are normal for today.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">My inverter is showing an error code. What should I do?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Inverter error codes can seem alarming but are usually manageable. The first step is to <strong>note the exact error code</strong> shown on your display or monitoring app and refer to your inverter's manual — most manuals list all codes with causes and remedies.</p>
+                <p>Common codes include grid faults (over/under-voltage, frequency issues), isolation faults (insulation problem in DC wiring), and over-temperature errors (poor ventilation around the inverter). For grid faults, the inverter usually recovers automatically once the grid stabilises.</p>
+                <div class="info-box">
+                  ℹ️ <strong>Safety first:</strong> For any error involving DC voltage, do NOT attempt repairs yourself. Contact your installer or a certified electrician.
+                </div>
+                <p>Try performing a restart: switch off the AC isolator, wait 60 seconds, then switch it back on. Many transient errors clear on restart. If the error persists after 2–3 restarts, log a service call with your inverter manufacturer or installer.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">Why is one panel producing less power than others?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Panel-level underperformance is typically caused by <strong>localised shading</strong> (a bird dropping, pigeon nest, or leaf covering just one cell can reduce that panel's output significantly due to bypass diode behaviour), soiling concentrated on one area, or a <strong>physical defect</strong> such as a micro-crack or delamination.</p>
+                <p>If you have microinverters or DC optimisers, your monitoring system should clearly identify the underperforming panel. For string inverters, you can use a clamp meter to measure current from each string during peak sunlight.</p>
+                <div class="tip-box">
+                  💡 Check System Health on your dashboard — it highlights panels flagged for inspection automatically.
+                </div>
+                <p>If cleaning and removing obstructions doesn't restore performance within 2–3 sunny days, contact your installer to perform an IV-curve trace or thermographic inspection to identify cell-level faults.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">What should I do if my monitoring system goes offline?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>A monitoring system going offline doesn't necessarily mean your solar panels have stopped generating — it usually means the <strong>communication link</strong> between the data logger and the internet has been disrupted. The panels may still be working fine.</p>
+                <p>First, check if your home Wi-Fi or router is working. Then check the data logger/inverter's Wi-Fi or ethernet connection and try reconnecting it to your network. Many inverters have a WPS button for quick Wi-Fi re-pairing.</p>
+                <p>If the logger reconnects, data from the offline period is often recovered and uploaded retroactively. For Solar Yield Detector, the app will sync the latest available data once connectivity is restored and display the updated stats on your dashboard.</p>
+                <div class="info-box">
+                  ℹ️ SolarBot can help diagnose connectivity issues — just ask "monitoring offline" in the chat.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">My system produces power but export to grid is zero — what's wrong?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Zero grid export while the system is still generating is a classic sign of an <strong>export limitation</strong> being active. This can be intentional — your utility's net metering agreement may cap export at a certain kW, or your installer may have programmed a zero-export setting to comply with local DISCOM rules.</p>
+                <p>It can also indicate a <strong>meter or CT (current transformer) issue</strong> — if the revenue meter or export CT is malfunctioning, the inverter may see all consumption as internal and not export. Alternatively, check that the grid-connected AC breaker and export relay are working correctly.</p>
+                <div class="tip-box">
+                  💡 Log into your inverter web interface and check the "export power" reading in real time. If it shows 0 W even with clear skies and low home load, call your DISCOM or installer.
+                </div>
+                <p>Also verify your net metering agreement is active and the bidirectional meter installed — some consumers are still on old unidirectional meters which cannot record export at all.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="troubleshooting">
+            <div class="accordion-header">
+              <span class="accordion-title">Why is my yield lower in the afternoon than the morning?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>This counter-intuitive pattern has two main causes: <strong>panel overheating</strong> and <strong>panel orientation</strong>. Solar panels lose approximately 0.4–0.5% efficiency for every degree Celsius above 25°C. In India, afternoon temperatures often push panel temperatures to 60–70°C, causing significant de-rating.</p>
+                <p>Additionally, if your panels face <strong>slightly east</strong> of south (common in installations prioritising morning production), they'll capture more irradiance in the morning than afternoon. West-facing or perfectly south-facing arrays will peak around solar noon.</p>
+                <div class="info-box">
+                  ℹ️ The Yield Breakdown card on your dashboard shows morning vs afternoon generation split. Check the Irradiance page to see how irradiance (GHI) varies through the day.
+                </div>
+                <p>You can check this pattern on the <strong>Yield Breakdown</strong> section of your dashboard and the <strong>ML Prediction</strong> page, which models temperature-induced efficiency loss.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /troubleshooting -->
+
+        <!-- ══ WEATHER IMPACT ══ -->
+        <div class="faq-category-section scroll-reveal" data-category="weather">
+          <div class="faq-category-header">
+            <span class="faq-category-icon">🌦️</span>
+            <span class="faq-category-title">Weather Impact</span>
+            <span class="faq-category-count">5 answers</span>
+          </div>
+
+          <div class="accordion-item" data-category="weather">
+            <div class="accordion-header">
+              <span class="accordion-title">How does cloud cover affect my solar yield?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Cloud cover is the single biggest day-to-day factor influencing solar yield. The relationship is roughly linear — <strong>every 10% increase in cloud cover reduces yield by approximately 5–7%</strong> compared to a clear day. However, thin high-altitude cirrus clouds can actually scatter light beneficially (diffuse irradiance), sometimes maintaining reasonable output.</p>
+                <p>Dense cumulus or nimbostratus clouds block 80–95% of direct irradiance, dropping output to a fraction of rated capacity. But <strong>panels still generate in cloudy conditions</strong> — diffuse sky radiation continues to produce power, just at reduced levels (typically 10–25% of clear-sky output).</p>
+                <div class="tip-box">
+                  💡 Your dashboard's Weather card shows real-time cloud cover percentage and the yield card automatically adjusts the estimated output accordingly.
+                </div>
+                <p>Use the <strong>ML Prediction</strong> page to forecast tomorrow's yield taking cloud cover into account — it uses the same Open-Meteo forecast data integrated into the dashboard.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="weather">
+            <div class="accordion-header">
+              <span class="accordion-title">Do solar panels work in rain?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Yes — solar panels work in rain, though at significantly reduced capacity. During rainfall, thick cloud cover typically reduces generation to <strong>5–20% of rated capacity</strong>. However, the silver lining (literally) is that rain naturally cleans your panels, removing accumulated dust and debris, which can boost post-rain yield by 5–12%.</p>
+                <p>All grid-tied solar systems are designed to operate safely in rain — panels are rated IP65 or IP67 (dust and water resistant), and inverters are typically IP54 or IP65 rated for outdoor installation. There is no risk from rain itself.</p>
+                <div class="info-box">
+                  ℹ️ After heavy rain, your Wash Alert on the dashboard will not trigger — the system knows rain has cleaned your panels naturally!
+                </div>
+                <p>If you notice your generation stays consistently low for several days after rain (beyond just the cloudy period), the rain may have left mineral deposits ("hard water spots") that require manual cleaning to remove.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="weather">
+            <div class="accordion-header">
+              <span class="accordion-title">How does temperature affect solar panel efficiency?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Solar panels are rated at a Standard Test Condition (STC) temperature of <strong>25°C</strong>. Above this temperature, efficiency drops at a rate specified by the Temperature Coefficient of Power (Pmax), typically <strong>-0.35% to -0.5% per °C</strong> for monocrystalline silicon panels.</p>
+                <p>In Indian summers, panel surface temperatures frequently reach 60–75°C, meaning real-world output can be <strong>15–25% below rated capacity</strong> purely due to heat. Paradoxically, cold clear winter days often yield better output than hot summer days despite shorter daylight hours.</p>
+                <div class="tip-box">
+                  💡 To minimise heat-related losses: ensure adequate airflow under your panels (minimum 10 cm clearance), choose panels with low temperature coefficients, and consider bifacial panels which run slightly cooler due to reduced front-surface heating.
+                </div>
+                <p>The ML Prediction model accounts for temperature effects — it uses the ambient temperature forecast and typical panel-to-ambient offset to estimate your actual output accurately.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="weather">
+            <div class="accordion-header">
+              <span class="accordion-title">Will fog reduce my morning generation?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Yes — fog is one of the most significant yield reducers for morning solar generation, particularly in northern India (Delhi NCR, Punjab, UP, Bihar) during November–February. Dense fog (visibility &lt; 200m) can reduce morning irradiance by <strong>70–90%</strong>, virtually eliminating generation until the fog lifts.</p>
+                <p>Moderate fog (visibility 200–1000m) reduces generation by 30–60%. The fog effect is most pronounced between 7 AM and 10 AM; once the sun angle increases, convective heating typically dissipates ground-level fog in most locations by mid-morning.</p>
+                <div class="info-box">
+                  ℹ️ The WMO weather code shown on your dashboard's Live Weather card includes fog codes (45 = Fog, 48 = Freezing Fog). When these appear, expect significantly reduced morning generation.
+                </div>
+                <p>One positive effect: fog deposits moisture on panel surfaces, which then evaporates and carries away some dust — a partial cleaning effect similar to light rain.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="weather">
+            <div class="accordion-header">
+              <span class="accordion-title">How do hailstorms impact solar panels?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Modern solar panels are tested to withstand hail up to <strong>25mm diameter at 23 m/s</strong> (per IEC 61215 standard), which covers the vast majority of hailstorms. Panels rated to this standard generally survive moderate hail without visible damage. However, extreme hailstorms with large hail (&gt;35mm) or very high wind speeds can cause micro-cracks or complete shattering of the glass.</p>
+                <p>Micro-cracks from hail are insidious — they may not be immediately visible but can cause <strong>progressive performance degradation</strong> over weeks to months. After any significant hailstorm, perform a visual inspection (look for chips, cracks, or shattered glass) and monitor your yield for the following 2–4 weeks for unusual drops.</p>
+                <div class="tip-box">
+                  💡 A thermal/IR camera inspection can detect micro-cracks and hotspots invisible to the naked eye — available through most solar service companies for ₹2,000–₹6,000.
+                </div>
+                <p>Physical hail damage is typically covered under your homeowner's insurance and may also be covered under the product warranty — check your warranty terms. File any claims promptly and document with photos taken immediately after the storm.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /weather -->
+
+        <!-- ══ MAINTENANCE ══ -->
+        <div class="faq-category-section scroll-reveal" data-category="maintenance">
+          <div class="faq-category-header">
+            <span class="faq-category-icon">🧹</span>
+            <span class="faq-category-title">Maintenance</span>
+            <span class="faq-category-count">5 answers</span>
+          </div>
+
+          <div class="accordion-item" data-category="maintenance">
+            <div class="accordion-header">
+              <span class="accordion-title">How often should I clean my solar panels?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Cleaning frequency depends heavily on your location and local conditions. As a general guideline for Indian conditions: <strong>every 2–4 weeks</strong> in dry, dusty regions (Rajasthan, Gujarat, parts of UP and MP), <strong>every 4–6 weeks</strong> in moderate climate zones, and as infrequently as <strong>every 2–3 months</strong> in areas with regular rainfall that cleans the panels naturally.</p>
+                <p>More important than a fixed schedule is <strong>monitoring-based cleaning</strong> — watch your yield data and clean when you notice a consistent 5–10% drop below your baseline on clear-sky days. Your Solar Yield Detector dashboard's Wash Alert feature automatically recommends cleaning based on wind speed data and dry spell duration.</p>
+                <div class="tip-box">
+                  💡 Best time to clean: early morning (6–8 AM) before the panels heat up. Cold water on hot glass can cause thermal shock and micro-cracks.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="maintenance">
+            <div class="accordion-header">
+              <span class="accordion-title">What's the best way to clean solar panels?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>The safest and most effective method is a <strong>soft brush or squeegee with clean water</strong> — no soap or detergents needed for routine cleaning. Soap can leave residue that attracts more dust over time. If you have hard water, use purified or RO water to prevent mineral deposits.</p>
+                <p>Avoid abrasive materials (steel wool, rough sponges) which can scratch the anti-reflective coating and permanently reduce transmittance. Also avoid metallic tools that could scratch the aluminium frame or glass.</p>
+                <div class="info-box">
+                  ℹ️ Professional robotic panel cleaners are increasingly available in India for ₹50–₹150 per panel per session — a good investment for large installations.
+                </div>
+                <p>For safety, <strong>never walk on panels</strong> and always use appropriate fall protection for rooftop systems. If your panels are not easily accessible, hire a professional cleaning service — the cost (₹500–₹2,000 for a 5kW system) is quickly recovered in improved yield.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="maintenance">
+            <div class="accordion-header">
+              <span class="accordion-title">How do I know if my panels need cleaning?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>The most reliable indicator is a <strong>data-driven approach</strong>: compare your current clear-sky yield with your historical baseline from a clean panel period. A consistent drop of 5% or more on clear-sky days (low cloud cover shown on dashboard) strongly suggests soiling is the cause.</p>
+                <p>Visual signs include a visible layer of dust, bird droppings, leaf debris, or discolouration on the panel surface. You can also check the <strong>Wash Alert banner</strong> on your dashboard — it triggers automatically when high wind speed has been recorded over recent days (indicating dust deposition) combined with a dry spell.</p>
+                <div class="tip-box">
+                  💡 Run your finger across a panel (with the system switched off or safely isolated) — if it leaves a visible streak in dust, it's time to clean.
+                </div>
+                <p>After cleaning, monitor yield for the next 2–3 sunny days. A return to baseline confirms soiling was the cause. If yield remains low after cleaning, investigate other causes such as shading, inverter issues, or panel degradation.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="maintenance">
+            <div class="accordion-header">
+              <span class="accordion-title">Can I use a pressure washer on solar panels?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p><strong>Not recommended</strong> in most cases. High-pressure water can force water into junction boxes and cable conduits, potentially causing insulation damage or corrosion over time. It can also dislodge or damage the weatherproof sealant around the panel frame, eventually allowing water ingress.</p>
+                <p>If you do use a pressure washer, keep pressure <strong>below 40 bar</strong> and maintain a distance of at least <strong>30–40 cm</strong> from the panel surface. Use a wide fan nozzle rather than a concentrated jet. Never point it at junction boxes, cable entries, or frame corners.</p>
+                <div class="info-box">
+                  ℹ️ Most panel manufacturers explicitly state "pressure washing not recommended" in their maintenance guidelines — check your product documentation.
+                </div>
+                <p>A gentle garden hose with a soft brush attachment achieves excellent results without any risk. For stubborn dirt (bird droppings, resin), soak with warm water for a few minutes to soften before gently wiping.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="maintenance">
+            <div class="accordion-header">
+              <span class="accordion-title">How do I check if my panels are physically damaged?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Start with a <strong>visual inspection</strong> from ground level using binoculars — look for cracked or shattered glass, delamination (bubbling or separation between glass and cells), discolouration (yellowing or browning of cells or encapsulant), and physical frame damage (bent, cracked or corroded aluminium).</p>
+                <p>For a closer inspection (safely accessible panels only), look for <strong>micro-cracks</strong> — these appear as hairline fractures in the cell visible under direct sunlight at certain angles. Bird droppings that have been left for extended periods can cause localised hotspots that eventually damage the underlying cells.</p>
+                <div class="tip-box">
+                  💡 The most accurate damage assessment is done with a <strong>thermal IR camera</strong> during peak generation hours — damaged cells show up as bright hotspots against the cooler surrounding cells.
+                </div>
+                <p>Also inspect the wiring and junction boxes for signs of burn marks, melting, or corrosion. Check that all MC4 connectors are fully engaged and sealed. Any visible wiring damage should be addressed by a qualified electrician immediately — damaged DC wiring is a fire hazard.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /maintenance -->
+
+        <!-- ══ WARRANTY ══ -->
+        <div class="faq-category-section scroll-reveal" data-category="warranty">
+          <div class="faq-category-header">
+            <span class="faq-category-icon">📋</span>
+            <span class="faq-category-title">Warranty</span>
+            <span class="faq-category-count">4 answers</span>
+          </div>
+
+          <div class="accordion-item" data-category="warranty">
+            <div class="accordion-header">
+              <span class="accordion-title">What is the standard warranty for solar panels?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Most quality solar panels come with two distinct warranties: a <strong>Product/Workmanship Warranty</strong> covering manufacturing defects (typically 10–12 years), and a <strong>Performance/Linear Warranty</strong> guaranteeing minimum power output over time (typically 25–30 years).</p>
+                <p>The performance warranty guarantees that panels will produce at least <strong>90% of rated power at 10 years</strong> and <strong>80% at 25 years</strong> (with some premium brands offering 87% at 25 years). Annual degradation is typically guaranteed to not exceed 0.5–0.7% per year.</p>
+                <div class="info-box">
+                  ℹ️ Inverter warranties are separate — typically 5–10 years, with extended warranty options available from most manufacturers for an additional cost.
+                </div>
+                <p>Always verify that your installer registers your panels with the manufacturer's warranty portal at the time of installation. Some manufacturers require registration within 30–90 days of installation for the full warranty to be valid.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="warranty">
+            <div class="accordion-header">
+              <span class="accordion-title">What voids a solar panel warranty?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Common warranty exclusions include: <strong>physical damage caused by improper installation, handling, or maintenance</strong> (e.g., someone walking on the panels or using abrasive cleaning materials), modifications or alterations to the panels, and damage caused by "acts of God" that are typically covered by insurance (hail, cyclone, fire, flood).</p>
+                <p>Using <strong>cleaning chemicals not approved by the manufacturer</strong>, failing to maintain adequate ventilation clearance under the panels, or connecting panels in configurations not specified in the datasheet can also void warranties.</p>
+                <div class="tip-box">
+                  💡 Always use certified installers (MNRE empanelled in India) for installation and any modifications — unapproved installation work is the most common cause of warranty rejection.
+                </div>
+                <p>Documenting your installation with photos and keeping your purchase invoice, installation certificate, and any maintenance records is essential for a successful warranty claim. Without proof of purchase and proper installation, many claims are rejected.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="warranty">
+            <div class="accordion-header">
+              <span class="accordion-title">My panel cracked after a hailstorm — is it covered?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Hail damage coverage depends on two separate policies: your <strong>manufacturer product warranty</strong> and your <strong>homeowner's insurance</strong>. Most manufacturer warranties explicitly exclude "external mechanical damage" including hail — however, if your panels failed under hail conditions they were IEC-tested to withstand (25mm at 23 m/s), you may have grounds for a warranty claim.</p>
+                <p>For hailstorms, your best recourse is typically your <strong>homeowner's or property insurance</strong>, which usually covers weather-related physical damage. File the claim as soon as possible after the storm — document all damage with dated photographs and keep the damaged panels for inspection if required by the insurer.</p>
+                <div class="info-box">
+                  ℹ️ Some solar-specific insurance products are now available in India (SBI Solar Insurance, IFFCO Tokio, etc.) that cover hail, cyclone, fire, and theft — worth adding to your portfolio.
+                </div>
+                <p>Regardless of insurance or warranty, replace cracked panels promptly. A cracked panel continues to generate voltage but creates serious safety hazards — exposed cells can cause electric shock during rain or cleaning.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="warranty">
+            <div class="accordion-header">
+              <span class="accordion-title">How do I file a warranty claim?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>The warranty claim process typically involves four steps: <strong>1) Documentation</strong> — gather your purchase invoice, installation certificate, panel serial numbers, and photographic evidence of the defect or underperformance data from your monitoring system. <strong>2) Notification</strong> — contact your installer first, as most warranties are serviced through the installation company. Alternatively, contact the manufacturer's India service centre directly.</p>
+                <p><strong>3) Assessment</strong> — the manufacturer will typically arrange an on-site inspection or ask you to send sample panels for lab testing (performance warranty claims usually require IV-curve data showing output below guaranteed levels). <strong>4) Resolution</strong> — replacement panels or a prorated refund is issued, usually within 30–60 days of claim approval.</p>
+                <div class="tip-box">
+                  💡 For performance warranty claims, print your yield history from this app as supporting evidence — month-by-month generation data compared against the manufacturer's performance guarantee curve is compelling documentation.
+                </div>
+                <p>Keep all written communication in email — verbal commitments from sales or service staff are difficult to enforce. If your claim is unreasonably rejected, the MNRE's (Ministry of New and Renewable Energy) grievance portal and consumer courts are effective escalation paths in India.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /warranty -->
+
+        <!-- ══ GETTING STARTED ══ -->
+        <div class="faq-category-section scroll-reveal" data-category="getting-started">
+          <div class="faq-category-header">
+            <span class="faq-category-icon">🚀</span>
+            <span class="faq-category-title">Getting Started</span>
+            <span class="faq-category-count">5 answers</span>
+          </div>
+
+          <div class="accordion-item" data-category="getting-started">
+            <div class="accordion-header">
+              <span class="accordion-title">How do I register my solar system in the app?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Registering your system takes under 2 minutes. On the <strong>sign-up page</strong>, after entering your name and email, you'll be guided through a setup wizard that asks for: your <strong>installed panel capacity</strong> (in kW — check your system's commissioning certificate), your <strong>installation date</strong>, your <strong>electricity tariff rate</strong> (₹/kWh — check your last electricity bill), and your <strong>location</strong> (enter PIN code or city name for automatic geocoding).</p>
+                <p>These details are stored securely in your browser's local storage and power all the calculations throughout the app — daily savings, total savings, ROI projections, and location-based weather and irradiance data all depend on this information being accurate.</p>
+                <div class="tip-box">
+                  💡 You can update your system details anytime — use SolarBot and ask "How do I update my panel details?" for step-by-step guidance.
+                </div>
+                <p>No physical connection to your inverter or monitoring system is required — Solar Yield Detector uses weather APIs and your system specs to calculate estimated values, making setup simple for any solar system regardless of brand or age.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="getting-started">
+            <div class="accordion-header">
+              <span class="accordion-title">How is my savings calculated?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Your savings are calculated using a straightforward energy economics formula: <strong>Daily kWh = Panel kW × Efficiency % × Peak Sun Hours</strong>. Peak Sun Hours defaults to 5 hours/day (India average) but is adjusted based on your location's latitude and historical irradiance data.</p>
+                <p>Your <strong>Daily Savings (₹)</strong> = Daily kWh × Your Electricity Rate (₹/kWh). This represents the electricity cost you avoided by generating solar power instead of drawing from the grid. <strong>Total Savings</strong> = Daily Savings × Days Since Installation.</p>
+                <div class="info-box">
+                  ℹ️ The calculation uses your entered electricity rate. For accurate results, use your marginal rate (the highest applicable slab from your electricity bill) rather than the average rate, as solar offsets your highest-cost consumption first.
+                </div>
+                <p>The ROI Calculator page provides a more detailed analysis including payback period, 10/20/25 year projections, annual escalation in electricity rates, and carbon offset in kg CO₂ — open it from the dashboard for a comprehensive financial picture.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="getting-started">
+            <div class="accordion-header">
+              <span class="accordion-title">What data does the app use for predictions?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Solar Yield Detector integrates with two primary data APIs: <strong>Open-Meteo</strong> (free, no API key required) for real-time and 7-day forecast weather data including temperature, cloud cover, wind speed, precipitation and humidity; and <strong>NASA POWER</strong> for historical solar irradiance data (GHI, DNI, DHI) on the Irradiance page.</p>
+                <p>The <strong>ML Prediction</strong> page uses a regression model trained on historical solar generation and weather data. You provide the input parameters (tomorrow's expected cloud cover, temperature, etc.) via sliders, and the model estimates your expected generation with confidence intervals based on patterns in the training data.</p>
+                <div class="tip-box">
+                  💡 All API calls are made directly from your browser to the data sources — no data passes through our servers, ensuring your privacy and eliminating server-side costs.
+                </div>
+                <p>Weather data is refreshed each time you load or manually refresh the dashboard. Historical irradiance data from NASA POWER is cached for 24 hours to avoid redundant API calls. The app works entirely offline for saved data, with only weather and NASA calls requiring internet.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="getting-started">
+            <div class="accordion-header">
+              <span class="accordion-title">How do I update my location or panel details?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Currently, system details can be updated by <strong>logging out and signing up again</strong> with your updated information — your new configuration will be saved and all calculations will immediately reflect the changes. A dedicated settings/profile page is coming in a future update.</p>
+                <p>For location specifically, the app uses your city or PIN code to determine latitude and longitude for weather data. If you've moved or your original location was inaccurate, updating it ensures weather data, irradiance calculations, and ML predictions all use your correct geographic position.</p>
+                <div class="info-box">
+                  ℹ️ You can also ask SolarBot: "update my location" and it will walk you through the process step by step.
+                </div>
+                <p>If you've upgraded your solar system (added more panels or replaced the inverter), update your panel capacity (kW) to ensure savings and ROI calculations reflect your current installed capacity. Updating the installation date is also important for accurate total savings calculations.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item" data-category="getting-started">
+            <div class="accordion-header">
+              <span class="accordion-title">Is my data private and secure?</span>
+              <span class="accordion-icon">▾</span>
+            </div>
+            <div class="accordion-body">
+              <div class="accordion-body-inner faq-answer">
+                <p>Absolutely. Solar Yield Detector is designed with a <strong>privacy-first architecture</strong> — all your data (name, email, system details, location) is stored exclusively in your browser's <strong>localStorage</strong>, which is sandboxed to your device and never transmitted to any server controlled by us.</p>
+                <p>The only external calls made by the app are to the <strong>Open-Meteo weather API</strong> and <strong>NASA POWER API</strong> — both are public, read-only APIs that receive only your approximate latitude/longitude coordinates to return weather and irradiance data. No personally identifiable information is ever sent to these services.</p>
+                <div class="tip-box">
+                  💡 This also means your data is only on this browser/device. If you clear your browser data or switch devices, you'll need to re-register your system details.
+                </div>
+                <p>We recommend noting your key settings (panel kW, install date, electricity rate) somewhere safe so you can quickly re-enter them if needed. Future versions will include optional encrypted cloud sync for multi-device support.</p>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /getting-started -->
+
+        <!-- ─── D. STILL NEED HELP CTA ─── -->
+        <div class="help-cta-card scroll-reveal">
+          <div class="help-cta-icon">🤖</div>
+          <h2>Still need help?</h2>
+          <p>Chat with <strong>SolarBot</strong> for instant, personalised answers about your solar system — available 24/7, no waiting.</p>
+          <div class="help-cta-btns">
+            <button class="btn btn-primary btn-lg" id="open-chatbot-cta" onclick="SYD.Chatbot._open()">
+              💬 Chat with SolarBot
+            </button>
+            <a href="dashboard.html" class="btn btn-secondary btn-lg">
+              🏠 Go to Dashboard
+            </a>
+          </div>
+        </div>
+
+      </div><!-- /page-content -->
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
+
+  <!-- ═══════════════════════════════ CHATBOT ═══════════════════════════════ -->
+  <button class="chatbot-trigger" id="chatbot-trigger" title="Chat with SolarBot">💬</button>
+  <div class="chatbot-panel" id="chatbot-panel">
+    <div class="chatbot-header">
+      <div class="chatbot-avatar">☀️</div>
+      <div class="chatbot-header-info">
+        <div class="chatbot-header-name">SolarBot</div>
+        <div class="chatbot-header-status">Online — Ready to help</div>
+      </div>
+      <button class="chatbot-close" id="chatbot-close">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages"></div>
+    <div class="chatbot-quick-replies">
+      <button class="quick-reply-btn" data-msg="Why is my yield low?">Yield drop?</button>
+      <button class="quick-reply-btn" data-msg="Should I clean my panels?">Clean panels?</button>
+      <button class="quick-reply-btn" data-msg="Show my ROI">My ROI</button>
+      <button class="quick-reply-btn" data-msg="Weather impact on yield">Weather impact</button>
+    </div>
+    <div class="chatbot-input-row">
+      <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask SolarBot anything…">
+      <button class="chatbot-send" id="chatbot-send">➤</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+  <script src="app.js"></script>
+  <script>
+    /* ─── Auth guard ─── */
+    SYD.AuthManager.requireAuth();
+
+    /* ═══════════════════ ACCORDION ═══════════════════ */
+    document.querySelectorAll('.accordion-header').forEach(header => {
+      header.addEventListener('click', () => {
+        const item = header.closest('.accordion-item');
+        const body = item.querySelector('.accordion-body');
+        const isOpen = item.classList.contains('open');
+
+        /* Close all others */
+        document.querySelectorAll('.accordion-item.open').forEach(open => {
+          if (open !== item) {
+            open.classList.remove('open');
+            open.querySelector('.accordion-body').classList.remove('open');
+          }
+        });
+
+        /* Toggle this one */
+        item.classList.toggle('open', !isOpen);
+        body.classList.toggle('open', !isOpen);
+      });
+    });
+
+    /* ═══════════════════ SEARCH FILTER ═══════════════════ */
+    document.getElementById('faq-search').addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+
+      document.querySelectorAll('.accordion-item').forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = (!q || text.includes(q)) ? '' : 'none';
+      });
+
+      /* Show/hide category headers based on visible items */
+      document.querySelectorAll('.faq-category-section').forEach(section => {
+        const visibleItems = [...section.querySelectorAll('.accordion-item')]
+          .filter(i => i.style.display !== 'none');
+        section.style.display = visibleItems.length > 0 ? '' : 'none';
+      });
+
+      /* No results */
+      const totalVisible = [...document.querySelectorAll('.accordion-item')]
+        .filter(i => i.style.display !== 'none');
+      document.getElementById('no-results').style.display =
+        (q && totalVisible.length === 0) ? 'block' : 'none';
+    });
+
+    function clearSearch() {
+      document.getElementById('faq-search').value = '';
+      document.querySelectorAll('.accordion-item').forEach(i => i.style.display = '');
+      document.querySelectorAll('.faq-category-section').forEach(s => s.style.display = '');
+      document.getElementById('no-results').style.display = 'none';
+      activateTab('all');
+    }
+
+    /* ═══════════════════ TAB SWITCHING ═══════════════════ */
+    function activateTab(cat) {
+      /* Update tab buttons */
+      document.querySelectorAll('.faq-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
+      });
+
+      /* Show/hide category sections and items */
+      if (cat === 'all') {
+        document.querySelectorAll('.faq-category-section').forEach(s => s.style.display = '');
+        document.querySelectorAll('.accordion-item').forEach(i => i.style.display = '');
+      } else {
+        document.querySelectorAll('.faq-category-section').forEach(section => {
+          section.style.display = section.dataset.category === cat ? '' : 'none';
+        });
+        document.querySelectorAll('.accordion-item').forEach(item => {
+          item.style.display = item.dataset.category === cat ? '' : 'none';
+        });
+      }
+
+      /* Clear search when switching tabs */
+      const searchEl = document.getElementById('faq-search');
+      if (searchEl.value) {
+        searchEl.value = '';
+        document.getElementById('no-results').style.display = 'none';
+      }
+    }
+
+    document.querySelectorAll('.faq-tab').forEach(btn => {
+      btn.addEventListener('click', () => activateTab(btn.dataset.cat));
+    });
+
+    /* Open first accordion in category on tab switch for discoverability */
+    document.querySelectorAll('.faq-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Small delay to let display change apply
+        setTimeout(() => {
+          const firstVisible = document.querySelector('.accordion-item:not([style*="none"])');
+          if (firstVisible && !firstVisible.classList.contains('open')) {
+            const hdr = firstVisible.querySelector('.accordion-header');
+            if (hdr) hdr.click();
+          }
+        }, 50);
+      });
+    });
+  </script>
+</body>
+</html>

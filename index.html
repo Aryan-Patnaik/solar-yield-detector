@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar Yield Detector — Maximize Your Solar ROI with AI</title>
+  <meta name="description" content="Real-time solar yield monitoring, AI-powered predictions, and financial ROI tracking powered by NASA POWER data." />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* ========== LANDING NAV ========== */
+    .landing-nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0 2rem;
+      height: 68px;
+      background: rgba(var(--bg-base-rgb, 10,10,20), 0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      transition: background 0.3s;
+    }
+    .landing-nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-family:var(--font-heading);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .landing-nav-logo .logo-mark {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--solar), #f97316);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 1rem;
+      box-shadow: 0 0 16px rgba(245,158,11,0.4);
+      flex-shrink: 0;
+    }
+    .landing-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      flex: 1;
+      justify-content: center;
+    }
+    .landing-nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      padding: 0.45rem 0.85rem;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+    .landing-nav-links a:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.06);
+    }
+    .landing-nav-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .btn-ghost-nav {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.15);
+      color: var(--text-primary);
+      padding: 0.45rem 1rem;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s;
+      font-family:var(--font-body);
+    }
+    .btn-ghost-nav:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    /* ========== HERO ========== */
+    .landing-hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding-top: 68px;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+    }
+    #particles-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      opacity: 0.55;
+    }
+    .hero-bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      animation: orbFloat 12s ease-in-out infinite;
+    }
+    .hero-bg-orb-1 {
+      width: 560px; height: 560px;
+      background: radial-gradient(circle, rgba(245,158,11,0.22) 0%, transparent 70%);
+      top: -120px; left: -80px;
+      animation-duration: 14s;
+    }
+    .hero-bg-orb-2 {
+      width: 440px; height: 440px;
+      background: radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%);
+      top: 30%; right: 5%;
+      animation-duration: 10s;
+      animation-delay: -4s;
+    }
+    .hero-bg-orb-3 {
+      width: 320px; height: 320px;
+      background: radial-gradient(circle, rgba(16,185,129,0.15) 0%, transparent 70%);
+      bottom: 10%; left: 35%;
+      animation-duration: 16s;
+      animation-delay: -8s;
+    }
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      33% { transform: translateY(-28px) scale(1.04); }
+      66% { transform: translateY(16px) scale(0.97); }
+    }
+    .landing-hero-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 5rem 2rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 4rem;
+      align-items: center;
+    }
+    .landing-hero-content {
+      max-width: 620px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      color: var(--solar);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      font-family:var(--font-body);
+    }
+    .hero-title {
+      font-family:var(--font-heading);
+      font-size: clamp(2.4rem, 5vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.12;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.02em;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(135deg, var(--solar) 0%, #f97316 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-desc {
+      font-size: 1.1rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      max-width: 500px;
+    }
+    .hero-cta-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ========== HERO FLOATING CARDS ========== */
+    .hero-visual-right {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+    }
+    .hero-float-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      animation: cardFloat var(--float-dur, 6s) ease-in-out infinite;
+      animation-delay: var(--float-delay, 0s);
+      transition: transform 0.3s;
+    }
+    .hero-float-card:hover { transform: translateY(-4px) scale(1.02); }
+    @keyframes cardFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .hfc-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.3rem;
+      font-family:var(--font-body);
+    }
+    .hfc-value {
+      font-family:var(--font-heading);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.1;
+    }
+    .hfc-sub {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-top: 0.3rem;
+    }
+    .hfc-sub.up { color: var(--success); }
+    .hero-float-card-1 { --float-dur: 7s; --float-delay: 0s; }
+    .hero-float-card-2 { --float-dur: 8s; --float-delay: -3s; }
+    .hero-float-card-3 { --float-dur: 6.5s; --float-delay: -1.5s; }
+    .hfc-accent-bar {
+      width: 40px; height: 3px;
+      border-radius: 2px;
+      margin-bottom: 0.6rem;
+    }
+
+    /* ========== LANDING SECTION SHARED ========== */
+    .landing-section {
+      padding: 6rem 2rem;
+    }
+    .section-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--solar);
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.2);
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 1rem;
+      font-family:var(--font-body);
+    }
+    .section-title {
+      font-family:var(--font-heading);
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      max-width: 540px;
+      line-height: 1.7;
+      margin-bottom: 3.5rem;
+    }
+    .section-header { margin-bottom: 3.5rem; }
+
+    /* ========== FEATURES GRID ========== */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.03) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .feature-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      border-color: rgba(245,158,11,0.3);
+    }
+    .feature-icon-wrap {
+      width: 52px; height: 52px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      font-size: 1.5rem;
+      margin-bottom: 1.2rem;
+    }
+    .feature-name {
+      font-family:var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+    .feature-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+    .feature-card .feature-arrow {
+      position: absolute;
+      bottom: 1.5rem; right: 1.5rem;
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.06);
+      display: grid; place-items: center;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: background 0.2s, transform 0.2s;
+    }
+    .feature-card:hover .feature-arrow {
+      background: rgba(245,158,11,0.2);
+      color: var(--solar);
+      transform: translate(2px, -2px);
+    }
+
+    /* ========== STATS SECTION ========== */
+    .stats-section {
+      padding: 5rem 2rem;
+      background: linear-gradient(135deg,
+        rgba(245,158,11,0.08) 0%,
+        rgba(59,130,246,0.06) 50%,
+        rgba(16,185,129,0.07) 100%
+      );
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .stats-section::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(245,158,11,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .stats-row {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+    .stat-item {
+      text-align: center;
+      padding: 2.5rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .stat-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--stat-color, var(--solar));
+      opacity: 0.6;
+    }
+    .stat-item:hover { transform: translateY(-4px); box-shadow: 0 12px 28px rgba(0,0,0,0.2); }
+    .stat-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    .stat-number {
+      font-family:var(--font-heading);
+      font-size: 2.4rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ========== HOW IT WORKS ========== */
+    .how-section {
+      padding: 6rem 2rem;
+      background: var(--bg-base);
+    }
+    .how-steps {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .how-step {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      padding: 0 1.5rem;
+    }
+    .how-step-connector {
+      flex: 0 0 80px;
+      display: flex;
+      align-items: center;
+      padding-top: 36px;
+    }
+    .how-step-connector-line {
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--solar), rgba(245,158,11,0.3));
+      position: relative;
+    }
+    .how-step-connector-line::after {
+      content: '›';
+      position: absolute;
+      right: -6px;
+      top: -10px;
+      color: var(--solar);
+      font-size: 1.2rem;
+    }
+    .how-step-num {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--solar) 0%, #f97316 100%);
+      display: grid; place-items: center;
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 28px rgba(245,158,11,0.35);
+      flex-shrink: 0;
+      position: relative;
+    }
+    .how-step-num .step-badge {
+      position: absolute;
+      top: -4px; right: -4px;
+      width: 22px; height: 22px;
+      background: var(--bg-card);
+      border: 2px solid var(--solar);
+      border-radius: 50%;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--solar);
+      display: grid; place-items: center;
+      font-family:var(--font-heading);
+    }
+    .how-step-title {
+      font-family:var(--font-heading);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.6rem;
+    }
+    .how-step-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ========== CTA BANNER ========== */
+    .cta-section {
+      padding: 6rem 2rem;
+      background: linear-gradient(135deg, rgba(10,10,20,0.95) 0%, rgba(20,20,40,0.95) 100%);
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 700px; height: 400px;
+      background: radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .cta-section-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .cta-title {
+      font-family:var(--font-heading);
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.2rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+    .cta-title .highlight {
+      background: linear-gradient(135deg, var(--solar), #f97316);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cta-desc {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      margin-bottom: 2.5rem;
+      line-height: 1.7;
+    }
+    .cta-badges {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 2.5rem;
+    }
+    .cta-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-family:var(--font-body);
+    }
+    .cta-badge .check {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    /* ========== FOOTER ========== */
+    .landing-footer {
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      padding: 3.5rem 2rem 2rem;
+    }
+    .footer-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.5fr 1fr 1fr 1fr;
+      gap: 3rem;
+      margin-bottom: 3rem;
+    }
+    .footer-brand p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.7;
+      margin-top: 0.8rem;
+      max-width: 260px;
+    }
+    .footer-col-title {
+      font-family:var(--font-heading);
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1.2rem;
+    }
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+    .footer-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--solar); }
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .footer-bottom p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .footer-bottom-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    .footer-bottom-links a {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-bottom-links a:hover { color: var(--text-secondary); }
+
+    /* ========== SCROLL REVEAL ========== */
+    .scroll-reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+    .scroll-reveal.revealed {
+      opacity: 1;
+      transform: none;
+    }
+    .scroll-reveal:nth-child(2) { transition-delay: 0.1s; }
+    .scroll-reveal:nth-child(3) { transition-delay: 0.2s; }
+    .scroll-reveal:nth-child(4) { transition-delay: 0.3s; }
+    .scroll-reveal:nth-child(5) { transition-delay: 0.4s; }
+    .scroll-reveal:nth-child(6) { transition-delay: 0.5s; }
+
+    /* ========== FADE IN ========== */
+    .fade-in {
+      animation: fadeInUp 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: none; }
+    }
+    .fade-in-delay-1 { animation-delay: 0.1s; }
+    .fade-in-delay-2 { animation-delay: 0.25s; }
+    .fade-in-delay-3 { animation-delay: 0.4s; }
+    .fade-in-cards { animation-delay: 0.55s; }
+
+    /* ========== RESPONSIVE ========== */
+    @media (max-width: 1024px) {
+      .landing-hero-inner {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .landing-hero-content { max-width: 100%; }
+      .hero-cta-row { justify-content: center; }
+      .hero-desc { margin-left: auto; margin-right: auto; }
+      .hero-visual-right {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+      }
+      .hero-float-card { flex: 0 0 200px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .footer-inner { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .landing-nav-links { display: none; }
+      .landing-hero-inner { padding: 4rem 1.5rem 3rem; }
+      .features-grid { grid-template-columns: 1fr; }
+      .how-steps { flex-direction: column; align-items: center; gap: 1.5rem; }
+      .how-step-connector { display: none; }
+      .footer-inner { grid-template-columns: 1fr; gap: 2rem; }
+      .hero-visual-right { flex-direction: column; align-items: center; }
+      .hero-float-card { flex: unset; width: 100%; max-width: 280px; }
+    }
+
+    /* Theme — light mode overrides */
+    [data-theme="light"] .landing-nav {
+      background: rgba(255,255,255, 0.85);
+      border-bottom-color: rgba(0,0,0,0.08);
+    }
+    [data-theme="light"] .cta-section {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LANDING NAV ===== -->
+  <nav class="landing-nav">
+    <a href="index.html" class="landing-nav-logo">
+      <div class="logo-mark">☀️</div>
+      <span>Solar Yield</span>
+    </a>
+
+    <div class="landing-nav-links">
+      <a href="#features">Features</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="irradiance.html">Irradiance</a>
+      <a href="roi-calculator.html">ROI</a>
+      <a href="faq.html">FAQ</a>
+    </div>
+
+    <div class="landing-nav-right">
+      <button class="theme-toggle" data-theme-toggle aria-label="Toggle theme">
+        <div class="theme-toggle-track">
+          <div class="theme-toggle-thumb"></div>
+        </div>
+        <span class="theme-icon theme-icon-moon">🌙</span>
+        <span class="theme-icon theme-icon-sun" style="display:none">☀️</span>
+      </button>
+      <a href="login.html" class="btn-ghost-nav">Login</a>
+      <a href="login.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="landing-hero">
+    <div class="hero-bg">
+      <canvas id="particles-canvas"></canvas>
+      <div class="hero-bg-orb hero-bg-orb-1"></div>
+      <div class="hero-bg-orb hero-bg-orb-2"></div>
+      <div class="hero-bg-orb hero-bg-orb-3"></div>
+    </div>
+
+    <div class="landing-hero-inner">
+      <!-- Left: Content -->
+      <div class="landing-hero-content fade-in">
+        <div class="hero-eyebrow">⚡ Powered by NASA POWER &amp; Real AI</div>
+        <h1 class="hero-title">
+          Maximize Your<br>
+          <span class="highlight">Solar Yield</span><br>
+          with AI Intelligence
+        </h1>
+        <p class="hero-desc">
+          Real-time irradiance monitoring, XGBoost yield predictions, and financial ROI tracking — all in one powerful dashboard. Make data-driven decisions about your solar investment.
+        </p>
+        <div class="hero-cta-row">
+          <a href="dashboard.html" class="btn btn-primary btn-lg">🚀 View Dashboard</a>
+          <a href="#features" class="btn btn-secondary btn-lg">✦ See Features</a>
+        </div>
+      </div>
+
+      <!-- Right: Floating Cards -->
+      <div class="hero-visual-right fade-in fade-in-cards">
+        <!-- Card 1: Current Yield -->
+        <div class="hero-float-card hero-float-card-1">
+          <div class="hfc-accent-bar" style="background: linear-gradient(90deg, #f59e0b, #f97316);"></div>
+          <div class="hfc-label">⚡ Current Yield</div>
+          <div class="hfc-value">8.4 <small style="font-size:1rem;color:var(--text-secondary)">kWh</small></div>
+          <div class="hfc-sub up">↑ 12% from yesterday</div>
+        </div>
+
+        <!-- Card 2: Total Saved -->
+        <div class="hero-float-card hero-float-card-2">
+          <div class="hfc-accent-bar" style="background: linear-gradient(90deg, #10b981, #059669);"></div>
+          <div class="hfc-label">💰 Total Saved</div>
+          <div class="hfc-value" style="font-size:1.6rem">₹2,84,500</div>
+          <div class="hfc-sub">Since installation</div>
+        </div>
+
+        <!-- Card 3: System Health -->
+        <div class="hero-float-card hero-float-card-3">
+          <div class="hfc-accent-bar" style="background: linear-gradient(90deg, #3b82f6, #6366f1);"></div>
+          <div class="hfc-label">🔧 System Health</div>
+          <div class="hfc-value" style="color:#10b981">96%</div>
+          <div class="hfc-sub">🟢 All panels optimal</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURES SECTION ===== -->
+  <section id="features" class="landing-section">
+    <div class="section-inner">
+      <div class="section-header">
+        <div class="section-tag">✦ Features</div>
+        <h2 class="section-title">Everything You Need to<br>Maximize Solar Output</h2>
+        <p class="section-subtitle">
+          A complete toolkit built for solar system owners — from raw data to actionable insights and financial returns.
+        </p>
+      </div>
+
+      <div class="features-grid">
+
+        <!-- 1. ZIP Irradiance -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(245,158,11,0.12)">🗺️</div>
+          <div class="feature-name">ZIP Irradiance</div>
+          <p class="feature-desc">Real-time solar radiation data using the NASA POWER API for your exact location — accurate to within kilometers.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+        <!-- 2. ML Yield Prediction -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(59,130,246,0.12)">🤖</div>
+          <div class="feature-name">ML Yield Prediction</div>
+          <p class="feature-desc">XGBoost-powered forecasts for tomorrow's energy generation, trained on historical irradiance and weather patterns.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+        <!-- 3. Financial ROI -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(16,185,129,0.12)">💰</div>
+          <div class="feature-name">Financial ROI</div>
+          <p class="feature-desc">Daily and monthly savings in ₹ with exact payback period calculation and long-term ROI projection.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+        <!-- 4. Wash Alerts -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(139,92,246,0.12)">🧹</div>
+          <div class="feature-name">Wash Alerts</div>
+          <p class="feature-desc">Smart dust detection using wind speed and rain data to notify you exactly when your panels need cleaning.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+        <!-- 5. Weather Forecast -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(249,115,22,0.12)">🌦️</div>
+          <div class="feature-name">Weather Forecast</div>
+          <p class="feature-desc">Live cloud cover, temperature, humidity, and rainfall data for accurate short-term yield prediction.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+        <!-- 6. AI Chatbot -->
+        <div class="feature-card scroll-reveal">
+          <div class="feature-icon-wrap" style="background:rgba(239,68,68,0.12)">💬</div>
+          <div class="feature-name">AI Chatbot</div>
+          <p class="feature-desc">Natural language assistant for troubleshooting, maintenance advice, and instant solar system analysis.</p>
+          <div class="feature-arrow">›</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== STATS SECTION ===== -->
+  <div class="stats-section">
+    <div class="section-inner" style="text-align:center; margin-bottom:2.5rem;">
+      <div class="section-tag" style="display:inline-flex;">📊 By the Numbers</div>
+      <h2 class="section-title" style="margin-bottom:0.5rem;">Trusted by Solar Owners Across India</h2>
+      <p style="color:var(--text-secondary); font-size:0.95rem;">Real impact. Real savings. Powered by real data.</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat-item scroll-reveal" style="--stat-color: #f59e0b;">
+        <span class="stat-icon">🔆</span>
+        <div class="stat-number" id="stat-panels">0</div>
+        <div class="stat-label">Panels Monitored</div>
+      </div>
+      <div class="stat-item scroll-reveal" style="--stat-color: #3b82f6;">
+        <span class="stat-icon">⚡</span>
+        <div class="stat-number" id="stat-kwh">0</div>
+        <div class="stat-label">kWh Generated</div>
+      </div>
+      <div class="stat-item scroll-reveal" style="--stat-color: #10b981;">
+        <span class="stat-icon">💰</span>
+        <div class="stat-number" id="stat-saved">₹0</div>
+        <div class="stat-label">Money Saved</div>
+      </div>
+      <div class="stat-item scroll-reveal" style="--stat-color: #6366f1;">
+        <span class="stat-icon">⏱️</span>
+        <div class="stat-number" id="stat-uptime">0%</div>
+        <div class="stat-label">Avg Uptime</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how-section">
+    <div class="section-inner">
+      <div class="section-header" style="text-align:center;">
+        <div class="section-tag" style="display:inline-flex;">🚀 How It Works</div>
+        <h2 class="section-title">Get Started in 3 Simple Steps</h2>
+        <p class="section-subtitle" style="margin-left:auto; margin-right:auto; text-align:center;">
+          From sign-up to actionable solar insights in minutes — no technical expertise required.
+        </p>
+      </div>
+
+      <div class="how-steps">
+        <!-- Step 1 -->
+        <div class="how-step scroll-reveal">
+          <div class="how-step-num">
+            📝
+            <div class="step-badge">1</div>
+          </div>
+          <div class="how-step-title">Register &amp; Enter Details</div>
+          <p class="how-step-desc">Set up your location, panel specifications, installation date, and financial investment in minutes.</p>
+        </div>
+
+        <div class="how-step-connector scroll-reveal">
+          <div class="how-step-connector-line"></div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="how-step scroll-reveal">
+          <div class="how-step-num">
+            📊
+            <div class="step-badge">2</div>
+          </div>
+          <div class="how-step-title">Get Real-Time Insights</div>
+          <p class="how-step-desc">Instantly receive live yield data, weather conditions, and irradiance from NASA POWER satellites.</p>
+        </div>
+
+        <div class="how-step-connector scroll-reveal">
+          <div class="how-step-connector-line"></div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="how-step scroll-reveal">
+          <div class="how-step-num">
+            💡
+            <div class="step-badge">3</div>
+          </div>
+          <div class="how-step-title">Optimize &amp; Save</div>
+          <p class="how-step-desc">AI-driven predictions, automated cleaning alerts, and complete ROI tracking to maximize every rupee of your investment.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA BANNER ===== -->
+  <section class="cta-section">
+    <div class="cta-section-inner">
+      <div class="section-tag" style="display:inline-flex; justify-content:center; margin-bottom:1.5rem;">🎯 Get Started Today</div>
+      <h2 class="cta-title">Start Maximizing Your<br><span class="highlight">Solar ROI</span> Today</h2>
+      <p class="cta-desc">
+        Join hundreds of smart solar owners across India who are already saving more with AI-powered monitoring. Setup takes less than 3 minutes.
+      </p>
+      <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+        <a href="login.html" class="btn btn-primary btn-lg">🚀 Create Free Account</a>
+        <a href="dashboard.html" class="btn btn-secondary btn-lg">👁️ View Live Demo</a>
+      </div>
+      <div class="cta-badges">
+        <span class="cta-badge"><span class="check">✓</span> No credit card required</span>
+        <span class="cta-badge"><span class="check">✓</span> NASA POWER data included</span>
+        <span class="cta-badge"><span class="check">✓</span> AI predictions free</span>
+        <span class="cta-badge"><span class="check">✓</span> Works with any system size</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="landing-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a href="index.html" class="landing-nav-logo" style="text-decoration:none; display:inline-flex;">
+          <div class="logo-mark">☀️</div>
+          <span>Solar Yield</span>
+        </a>
+        <p>AI-powered solar yield monitoring for Indian homeowners. Powered by NASA POWER satellite data and XGBoost machine learning.</p>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Product</div>
+        <ul class="footer-links">
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="irradiance.html">Irradiance</a></li>
+          <li><a href="ml-prediction.html">ML Prediction</a></li>
+          <li><a href="roi-calculator.html">ROI Calculator</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Support</div>
+        <ul class="footer-links">
+          <li><a href="faq.html">FAQs</a></li>
+          <li><a href="#">Documentation</a></li>
+          <li><a href="#">API Reference</a></li>
+          <li><a href="#">Contact Us</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <ul class="footer-links">
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Data Sources</a></li>
+          <li><a href="#">Cookie Policy</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© 2026 Solar Yield Detector. All rights reserved. Built with ❤️ for India's solar future.</p>
+      <div class="footer-bottom-links">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Sitemap</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Init particles
+      window._particlesCleanup = SYD.ParticlesManager.init('particles-canvas');
+
+      // Animate stats on scroll
+      const statsObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            SYD.animateNumber(document.getElementById('stat-panels'), 12450, { duration: 2000 });
+            SYD.animateNumber(document.getElementById('stat-kwh'), 8420000, { duration: 2200 });
+            SYD.animateNumber(document.getElementById('stat-saved'), 67500000, { prefix: '₹', duration: 2500 });
+            SYD.animateNumber(document.getElementById('stat-uptime'), 99.2, { suffix: '%', decimals: 1, duration: 1800 });
+            statsObs.disconnect();
+          }
+        });
+      }, { threshold: 0.3 });
+
+      const statsSection = document.querySelector('.stats-row');
+      if (statsSection) statsObs.observe(statsSection);
+
+      // Scroll reveal observer
+      const revealObs = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            e.target.classList.add('revealed');
+          }
+        });
+      }, { threshold: 0.1 });
+      document.querySelectorAll('.scroll-reveal').forEach(el => revealObs.observe(el));
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+          const target = document.querySelector(a.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+      // Nav scroll effect (theme-aware)
+      const nav = document.querySelector('.landing-nav');
+      window.addEventListener('scroll', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+        if (window.scrollY > 60) {
+          nav.style.background = isDark ? 'rgba(8,13,26,0.96)' : 'rgba(238,242,255,0.96)';
+          nav.style.boxShadow = '0 4px 24px rgba(0,0,0,0.25)';
+        } else {
+          nav.style.background = '';
+          nav.style.boxShadow = '';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

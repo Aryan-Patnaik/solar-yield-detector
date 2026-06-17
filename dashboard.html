@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Solar Yield Detector</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Dashboard-specific extras ── */
+    .greeting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6);
+    }
+    .greeting-text h1 {
+      font-size: clamp(1.4rem, 2.5vw, 1.9rem); font-weight: 800; margin-bottom: 3px;
+    }
+    .greeting-text p { font-size: 0.88rem; color: var(--text-secondary); }
+    .greeting-time {
+      font-size: 0.78rem; color: var(--text-muted);
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius-full); padding: 6px 14px;
+    }
+
+    /* Efficiency progress */
+    .efficiency-progress-wrap {
+      margin-top: var(--space-3);
+      background: var(--bg-input); border-radius: var(--radius-full); height: 6px; overflow: hidden;
+    }
+    .efficiency-progress-fill {
+      height: 100%; width: 0%; border-radius: var(--radius-full);
+      background: linear-gradient(90deg, var(--purple), var(--blue));
+      transition: width 1.5s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* Weather card loading */
+    .weather-loading {
+      display: flex; flex-direction: column; align-items: center;
+      gap: var(--space-4); padding: var(--space-8) 0; color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .weather-content { display: none; }
+    .weather-content.loaded { display: block; }
+    .weather-label-divider {
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-3);
+    }
+
+    /* Chart period buttons */
+    .period-btns { display: flex; gap: var(--space-2); }
+    .period-btn {
+      padding: 5px 12px; border-radius: var(--radius-full); font-size: 0.78rem;
+      font-weight: 600; background: var(--bg-secondary); border: 1px solid var(--border);
+      color: var(--text-muted); cursor: pointer; transition: all var(--transition-fast);
+    }
+    .period-btn.active {
+      background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.4); color: var(--solar);
+    }
+    .period-btn:hover:not(.active) { border-color: var(--border-hover); color: var(--text-primary); }
+
+    /* Yield vs expected label */
+    .yield-vs-label {
+      display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4);
+      font-size: 0.78rem; color: var(--text-muted);
+    }
+    .yield-vs-label span { display: flex; align-items: center; gap: 5px; }
+    .yield-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* Energy breakdown bars */
+    .energy-row {
+      display: flex; align-items: center; gap: var(--space-3);
+      margin-bottom: var(--space-4); font-size: 0.85rem;
+    }
+    .energy-label { width: 110px; color: var(--text-secondary); flex-shrink: 0; font-size: 0.8rem; }
+    .energy-bar-wrap { flex: 1; background: var(--bg-input); border-radius: var(--radius-full); height: 8px; overflow: hidden; }
+    .energy-bar-fill { height: 100%; border-radius: var(--radius-full); width: 0; transition: width 1.4s cubic-bezier(0.4,0,0.2,1); }
+    .energy-pct { min-width: 36px; text-align: right; font-weight: 700; font-size: 0.82rem; }
+
+    /* Health indicators */
+    .health-list { display: flex; flex-direction: column; gap: var(--space-3); }
+    .health-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-3) var(--space-4); background: var(--bg-secondary);
+      border-radius: var(--radius-md); font-size: 0.85rem;
+    }
+    .health-label { color: var(--text-secondary); }
+    .health-status { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.82rem; }
+
+    /* Monthly doughnut center label */
+    .doughnut-wrap { position: relative; height: 200px; }
+    .doughnut-center {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none;
+    }
+    .doughnut-center-val {
+      font-family: var(--font-heading); font-size: 1.5rem; font-weight: 800; color: var(--text-primary);
+    }
+    .doughnut-center-sub { font-size: 0.7rem; color: var(--text-muted); }
+
+    /* Section spacing */
+    .section-gap { margin-bottom: var(--space-6); }
+    .section-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-4); flex-wrap: wrap; gap: var(--space-3);
+    }
+    .section-heading {
+      font-family: var(--font-heading); font-size: 1.05rem; font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Location badge on weather card */
+    .location-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.72rem; font-weight: 600;
+      background: rgba(59,130,246,0.1); color: var(--blue);
+      border: 1px solid rgba(59,130,246,0.2); border-radius: var(--radius-full);
+      padding: 3px 10px;
+    }
+
+    /* Quick nav section label */
+    .quick-nav-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: var(--space-2);
+    }
+
+    /* Animated counter shimmer on stat-card-value */
+    .stat-card-value.loading {
+      background: linear-gradient(90deg, var(--bg-secondary) 25%, var(--bg-card-alt,#18253e) 50%, var(--bg-secondary) 75%);
+      background-size: 200% 100%; animation: skeletonWave 1.4s ease infinite;
+      border-radius: var(--radius-sm); color: transparent; min-height: 2.2rem;
+    }
+
+    /* Weather error state */
+    .weather-error {
+      text-align: center; padding: var(--space-8) 0;
+      color: var(--text-muted); font-size: 0.85rem; display: none;
+    }
+    .weather-error .error-icon { font-size: 2.5rem; margin-bottom: var(--space-3); }
+
+    @media (max-width: 768px) {
+      .weather-meta { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- ═══════════════════════════════ SIDEBAR ═══════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">☀️</div>
+        <span class="sidebar-brand">Solar Yield</span>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Main</div>
+        <a href="dashboard.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Dashboard</span>
+        </a>
+        <a href="irradiance.html" class="nav-item">
+          <span class="nav-icon">☀️</span>
+          <span class="nav-label">Irradiance</span>
+        </a>
+        <a href="ml-prediction.html" class="nav-item">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-label">ML Prediction</span>
+        </a>
+        <a href="roi-calculator.html" class="nav-item">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">ROI Calculator</span>
+        </a>
+        <div class="nav-section-label">Help</div>
+        <a href="faq.html" class="nav-item">
+          <span class="nav-icon">❓</span>
+          <span class="nav-label">FAQs</span>
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sidebar-collapse-btn nav-item">
+          <span class="nav-icon collapse-icon">‹</span>
+          <span class="nav-label">Collapse</span>
+        </button>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+    <!-- ═══════════════════════════════ MAIN CONTENT ═══════════════════════════════ -->
+    <div class="main-content" id="main-content">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <button class="topbar-hamburger" id="topbar-hamburger">☰</button>
+        <span class="topbar-title">Dashboard</span>
+        <div class="topbar-spacer"></div>
+        <div class="topbar-actions">
+          <div class="topbar-location user-location-display">📍 Location</div>
+          <button class="theme-toggle" data-theme-toggle>
+            <div class="theme-toggle-track">
+              <div class="theme-toggle-thumb"></div>
+            </div>
+            <span class="theme-icon theme-icon-moon">🌙</span>
+            <span class="theme-icon theme-icon-sun" style="display:none">☀️</span>
+          </button>
+          <div class="user-avatar" title="Profile">U</div>
+        </div>
+      </div>
+
+      <!-- PAGE CONTENT -->
+      <div class="page-content">
+
+        <!-- ─── GREETING ROW ─── -->
+        <div class="greeting-row fade-in">
+          <div class="greeting-text">
+            <h1 class="user-greeting">Good evening, User!</h1>
+            <p>Here's your solar system overview for today, <span id="today-date"></span></p>
+          </div>
+          <div class="greeting-time" id="live-clock">--:-- --</div>
+        </div>
+
+        <!-- ─── A. WASH ALERT BANNER ─── -->
+        <div class="alert alert-warning hidden" id="wash-alert">
+          <div class="alert-icon">🌬️</div>
+          <div class="alert-content">
+            <div class="alert-title">Time to Clean Your Panels!</div>
+            <div class="alert-body">High wind speeds detected in the past 3 days may have deposited dust on your panels, potentially reducing yield by 5–15%. Schedule a cleaning soon for optimal performance.</div>
+          </div>
+          <button class="alert-dismiss" id="wash-alert-dismiss" title="Dismiss">✕</button>
+        </div>
+
+        <!-- ─── B. STAT CARDS ─── -->
+        <div class="grid-4 section-gap fade-in fade-in-delay-1">
+
+          <!-- Current Yield -->
+          <div class="stat-card solar scroll-reveal">
+            <div class="stat-card-icon solar">⚡</div>
+            <div class="stat-card-label">Current Yield</div>
+            <div class="stat-card-value" id="current-yield">— kW</div>
+            <div class="stat-card-sub">Today so far</div>
+            <div class="stat-card-change up" id="yield-change">↑ +2.1 kWh vs yesterday</div>
+          </div>
+
+          <!-- Daily Savings -->
+          <div class="stat-card green scroll-reveal">
+            <div class="stat-card-icon green">💰</div>
+            <div class="stat-card-label">Daily Savings</div>
+            <div class="stat-card-value" id="daily-savings">₹—</div>
+            <div class="stat-card-sub">At current rate</div>
+            <div class="stat-card-change up">↑ Avg ₹ saved today</div>
+          </div>
+
+          <!-- Total Savings -->
+          <div class="stat-card blue scroll-reveal">
+            <div class="stat-card-icon blue">🏦</div>
+            <div class="stat-card-label">Total Saved Since Install</div>
+            <div class="stat-card-value" id="total-savings">₹—</div>
+            <div class="stat-card-sub" id="install-days">— days of savings</div>
+            <div class="stat-card-change up">↑ Compound savings</div>
+          </div>
+
+          <!-- Panel Efficiency -->
+          <div class="stat-card purple scroll-reveal">
+            <div class="stat-card-icon purple">📊</div>
+            <div class="stat-card-label">Panel Efficiency</div>
+            <div class="stat-card-value" id="efficiency-val">91%</div>
+            <div class="efficiency-progress-wrap">
+              <div class="efficiency-progress-fill" id="efficiency-bar"></div>
+            </div>
+            <div class="stat-card-sub">Above average performance</div>
+          </div>
+
+        </div>
+
+        <!-- ─── C. WEATHER + YIELD CHART ─── -->
+        <div class="grid-2 section-gap">
+
+          <!-- LEFT: Weather Card -->
+          <div class="chart-card scroll-reveal">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🌦️ Live Weather</div>
+                <div class="chart-card-sub">Open-Meteo real-time data</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:var(--space-2);">
+                <span class="location-badge" id="weather-location-badge">📍 Loading…</span>
+                <button class="btn btn-ghost btn-sm" id="weather-refresh-btn" title="Refresh weather">🔄 Update</button>
+              </div>
+            </div>
+
+            <!-- Loading state -->
+            <div class="weather-loading" id="weather-loading">
+              <div class="spinner"></div>
+              <span>Fetching live weather data…</span>
+            </div>
+
+            <!-- Error state -->
+            <div class="weather-error" id="weather-error">
+              <div class="error-icon">🌐</div>
+              <p>Unable to load weather data.<br>Check your internet connection.</p>
+              <button class="btn btn-ghost btn-sm mt-4" onclick="retryWeather()">Try Again</button>
+            </div>
+
+            <!-- Loaded content -->
+            <div class="weather-content" id="weather-content">
+              <div class="weather-main">
+                <div class="weather-icon-big" id="weather-icon">⛅</div>
+                <div>
+                  <div class="weather-temp" id="weather-temp">—°C</div>
+                  <div class="weather-desc" id="weather-desc">Loading…</div>
+                  <div class="weather-location" id="weather-loc-text">📍 —</div>
+                </div>
+              </div>
+
+              <div class="weather-meta">
+                <div class="weather-meta-item">
+                  <div class="weather-meta-icon">💨</div>
+                  <div class="weather-meta-value" id="weather-wind">—</div>
+                  <div class="weather-meta-label">Wind km/h</div>
+                </div>
+                <div class="weather-meta-item">
+                  <div class="weather-meta-icon">💧</div>
+                  <div class="weather-meta-value" id="weather-humidity">—</div>
+                  <div class="weather-meta-label">Humidity</div>
+                </div>
+                <div class="weather-meta-item">
+                  <div class="weather-meta-icon">☁️</div>
+                  <div class="weather-meta-value" id="weather-cloud">—</div>
+                  <div class="weather-meta-label">Cloud Cover</div>
+                </div>
+                <div class="weather-meta-item">
+                  <div class="weather-meta-icon">🌧️</div>
+                  <div class="weather-meta-value" id="weather-rain">—</div>
+                  <div class="weather-meta-label">Rain mm</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+              <div class="weather-label-divider">7-Day Forecast</div>
+              <div class="forecast-strip" id="forecast-strip">
+                <!-- Populated by JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Yield Chart -->
+          <div class="chart-card scroll-reveal">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">⚡ Yield History</div>
+                <div class="chart-card-sub">Daily generation (kWh)</div>
+              </div>
+              <div class="period-btns">
+                <button class="period-btn active" data-period="7">7D</button>
+                <button class="period-btn" data-period="30">30D</button>
+                <button class="period-btn" data-period="90">90D</button>
+              </div>
+            </div>
+            <div class="chart-container" style="height:220px;">
+              <canvas id="yield-chart"></canvas>
+            </div>
+            <div class="yield-vs-label">
+              <span><span class="yield-dot" style="background:rgba(245,158,11,0.8)"></span>Actual Yield</span>
+              <span><span class="yield-dot" style="background:rgba(59,130,246,0.6)"></span>Expected</span>
+              <span style="margin-left:auto;color:var(--green);font-weight:600;">↑ 8.3% above avg</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ─── D. THREE-COLUMN SECTION ─── -->
+        <div class="grid-3 section-gap">
+
+          <!-- Card 1: Monthly Generation -->
+          <div class="chart-card scroll-reveal">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">📅 Monthly Generation</div>
+                <div class="chart-card-sub">June 2026</div>
+              </div>
+              <span class="badge badge-green">77.5% done</span>
+            </div>
+            <div class="doughnut-wrap">
+              <canvas id="monthly-chart"></canvas>
+              <div class="doughnut-center">
+                <div class="doughnut-center-val">186</div>
+                <div class="doughnut-center-sub">kWh generated</div>
+              </div>
+            </div>
+            <div class="divider" style="margin:var(--space-4) 0;"></div>
+            <div class="flex justify-between" style="font-size:0.82rem;">
+              <div>
+                <div style="color:var(--text-muted);margin-bottom:2px;">Generated</div>
+                <div style="font-weight:700;color:var(--solar);">186 kWh</div>
+              </div>
+              <div style="text-align:right;">
+                <div style="color:var(--text-muted);margin-bottom:2px;">Monthly Target</div>
+                <div style="font-weight:700;color:var(--text-primary);">240 kWh</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Energy Mix / Yield Breakdown -->
+          <div class="chart-card scroll-reveal">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">☀️ Yield Breakdown</div>
+                <div class="chart-card-sub">By time of day (today)</div>
+              </div>
+            </div>
+
+            <div style="margin-bottom:var(--space-5);">
+              <div class="energy-row">
+                <div class="energy-label">🌅 Morning<br><span style="color:var(--text-muted);font-size:0.72rem;">6 AM – 12 PM</span></div>
+                <div class="energy-bar-wrap">
+                  <div class="energy-bar-fill" style="background:var(--gradient-blue);" data-width="35"></div>
+                </div>
+                <div class="energy-pct text-blue">35%</div>
+              </div>
+              <div class="energy-row">
+                <div class="energy-label">🌞 Afternoon<br><span style="color:var(--text-muted);font-size:0.72rem;">12 PM – 6 PM</span></div>
+                <div class="energy-bar-wrap">
+                  <div class="energy-bar-fill" style="background:var(--gradient-solar);" data-width="52"></div>
+                </div>
+                <div class="energy-pct text-solar">52%</div>
+              </div>
+              <div class="energy-row">
+                <div class="energy-label">🌆 Evening<br><span style="color:var(--text-muted);font-size:0.72rem;">6 PM – 9 PM</span></div>
+                <div class="energy-bar-wrap">
+                  <div class="energy-bar-fill" style="background:var(--gradient-green);" data-width="13"></div>
+                </div>
+                <div class="energy-pct text-green">13%</div>
+              </div>
+            </div>
+
+            <div class="divider" style="margin:var(--space-4) 0;"></div>
+            <div class="data-row">
+              <span class="data-row-label">Peak output time</span>
+              <span class="data-row-value text-solar">1:30 PM</span>
+            </div>
+            <div class="data-row">
+              <span class="data-row-label">Total today</span>
+              <span class="data-row-value" id="total-today-kwh">—</span>
+            </div>
+            <div class="data-row">
+              <span class="data-row-label">Best day this month</span>
+              <span class="data-row-value text-green">18.9 kWh (Jun 8)</span>
+            </div>
+          </div>
+
+          <!-- Card 3: System Health -->
+          <div class="chart-card scroll-reveal">
+            <div class="chart-card-header">
+              <div>
+                <div class="chart-card-title">🔋 System Health</div>
+                <div class="chart-card-sub">Live status indicators</div>
+              </div>
+              <span class="badge badge-green">● Healthy</span>
+            </div>
+
+            <div class="health-list">
+              <div class="health-item">
+                <span class="health-label">Inverter Status</span>
+                <span class="health-status" style="color:var(--green);">🟢 Online</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Grid Connection</span>
+                <span class="health-status" style="color:var(--green);">🟢 Connected</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Panel Array</span>
+                <span class="health-status" style="color:var(--solar);">🟡 Check Panel 3</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Battery Backup</span>
+                <span class="health-status" style="color:var(--blue);">🔵 N/A</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Data Logger</span>
+                <span class="health-status" style="color:var(--green);">🟢 Active</span>
+              </div>
+              <div class="health-item">
+                <span class="health-label">Last Sync</span>
+                <span class="health-status" style="color:var(--text-muted);font-weight:500;">Just now</span>
+              </div>
+            </div>
+
+            <div class="divider" style="margin:var(--space-4) 0;"></div>
+            <div style="font-size:0.78rem;color:var(--text-muted);text-align:center;">
+              Next maintenance check: <strong style="color:var(--text-primary);">Jul 1, 2026</strong>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ─── E. QUICK NAV CARDS ─── -->
+        <div class="section-title-row">
+          <div class="section-heading">🚀 Explore</div>
+          <span style="font-size:0.8rem;color:var(--text-muted);">Navigate to key features</span>
+        </div>
+        <div class="grid-4 section-gap">
+          <a href="irradiance.html" class="quick-nav-card scroll-reveal">
+            <div class="quick-nav-icon">☀️</div>
+            <div class="quick-nav-title">Solar Irradiance</div>
+            <div class="quick-nav-desc">View GHI, DNI & DHI data from NASA POWER API for your location</div>
+            <div class="quick-nav-arrow">→</div>
+          </a>
+          <a href="ml-prediction.html" class="quick-nav-card scroll-reveal">
+            <div class="quick-nav-icon">🤖</div>
+            <div class="quick-nav-title">ML Prediction</div>
+            <div class="quick-nav-desc">Get AI-powered tomorrow's yield forecast with confidence intervals</div>
+            <div class="quick-nav-arrow">→</div>
+          </a>
+          <a href="roi-calculator.html" class="quick-nav-card scroll-reveal">
+            <div class="quick-nav-icon">💰</div>
+            <div class="quick-nav-title">ROI Calculator</div>
+            <div class="quick-nav-desc">Calculate payback period, ROI % and carbon offset over 25 years</div>
+            <div class="quick-nav-arrow">→</div>
+          </a>
+          <a href="faq.html" class="quick-nav-card scroll-reveal">
+            <div class="quick-nav-icon">❓</div>
+            <div class="quick-nav-title">FAQ &amp; Help</div>
+            <div class="quick-nav-desc">Searchable answers for troubleshooting, maintenance &amp; warranty</div>
+            <div class="quick-nav-arrow">→</div>
+          </a>
+        </div>
+
+      </div><!-- /page-content -->
+    </div><!-- /main-content -->
+  </div><!-- /app-layout -->
+
+  <!-- ═══════════════════════════════ CHATBOT ═══════════════════════════════ -->
+  <button class="chatbot-trigger" id="chatbot-trigger" title="Chat with SolarBot">💬</button>
+  <div class="chatbot-panel" id="chatbot-panel">
+    <div class="chatbot-header">
+      <div class="chatbot-avatar">☀️</div>
+      <div class="chatbot-header-info">
+        <div class="chatbot-header-name">SolarBot</div>
+        <div class="chatbot-header-status">Online — Ready to help</div>
+      </div>
+      <button class="chatbot-close" id="chatbot-close">✕</button>
+    </div>
+    <div class="chatbot-messages" id="chatbot-messages"></div>
+    <div class="chatbot-quick-replies">
+      <button class="quick-reply-btn" data-msg="Why is my yield low?">Yield drop?</button>
+      <button class="quick-reply-btn" data-msg="Should I clean my panels?">Clean panels?</button>
+      <button class="quick-reply-btn" data-msg="Show my ROI">My ROI</button>
+      <button class="quick-reply-btn" data-msg="Weather impact on yield">Weather impact</button>
+    </div>
+    <div class="chatbot-input-row">
+      <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask SolarBot anything…">
+      <button class="chatbot-send" id="chatbot-send">➤</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════ SCRIPTS ═══════════════════════════════ -->
+  <script src="app.js"></script>
+  <script>
+    /* ─── Auth guard ─── */
+    SYD.AuthManager.requireAuth();
+
+    /* ─── Live clock ─── */
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('live-clock').textContent = now.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit', hour12:true });
+      document.getElementById('today-date').textContent = now.toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long' });
+    }
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    /* ─── Dismiss wash alert ─── */
+    document.getElementById('wash-alert-dismiss')?.addEventListener('click', () => {
+      document.getElementById('wash-alert').classList.add('hidden');
+    });
+
+    /* ─── Period button switcher ─── */
+    document.querySelectorAll('.period-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        updateYieldChart(parseInt(this.dataset.period));
+      });
+    });
+
+    /* ─── Weather refresh ─── */
+    document.getElementById('weather-refresh-btn')?.addEventListener('click', () => {
+      const user = SYD.AuthManager.getUser();
+      loadWeather(user);
+    });
+
+    /* ═══════════════════ SAVINGS INIT ═══════════════════ */
+    function initSavings(user) {
+      const daily  = SYD.SavingsCalc.getDailySavings(user);
+      const total  = SYD.SavingsCalc.getTotalSavings(user);
+      const days   = SYD.SavingsCalc.getDaysSinceInstall(user);
+      const dailyKwh = SYD.SavingsCalc.getDailyKWh(user);
+
+      SYD.animateNumber(document.getElementById('daily-savings'), daily, { prefix: '₹', decimals: 0 });
+      SYD.animateNumber(document.getElementById('total-savings'), total, { prefix: '₹', decimals: 0, duration: 2500 });
+      document.getElementById('install-days').textContent = (days || 247) + ' days of savings';
+      document.getElementById('total-today-kwh').textContent = dailyKwh.toFixed(1) + ' kWh';
+    }
+
+    /* ═══════════════════ EFFICIENCY BAR ═══════════════════ */
+    function animateEfficiencyBar(pct) {
+      setTimeout(() => {
+        const bar = document.getElementById('efficiency-bar');
+        if (bar) bar.style.width = pct + '%';
+      }, 600);
+    }
+
+    /* ═══════════════════ YIELD CHART ═══════════════════ */
+    let yieldChartInstance = null;
+    function generateYieldData(days) {
+      const labels = [], data = [], expected = [];
+      for (let i = days - 1; i >= 0; i--) {
+        const d = new Date(); d.setDate(d.getDate() - i);
+        if (days <= 7) {
+          labels.push(d.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric' }));
+        } else if (days <= 30) {
+          labels.push(d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }));
+        } else {
+          labels.push(i % 7 === 0 ? d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '');
+        }
+        data.push(parseFloat((Math.random() * 7 + 12).toFixed(1)));
+        expected.push(parseFloat((Math.random() * 2 + 13).toFixed(1)));
+      }
+      return { labels, data, expected };
+    }
+
+    function updateYieldChart(days = 7) {
+      const ctx = document.getElementById('yield-chart')?.getContext('2d');
+      if (!ctx) return;
+      const { labels, data, expected } = generateYieldData(days);
+      if (yieldChartInstance) yieldChartInstance.destroy();
+      yieldChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Yield (kWh)',
+              data,
+              backgroundColor: 'rgba(245,158,11,0.72)',
+              borderColor: 'rgba(245,158,11,1)',
+              borderWidth: 2,
+              borderRadius: 7,
+              borderSkipped: false,
+              order: 2
+            },
+            {
+              label: 'Expected (kWh)',
+              data: expected,
+              type: 'line',
+              borderColor: 'rgba(59,130,246,0.7)',
+              backgroundColor: 'rgba(59,130,246,0.06)',
+              borderWidth: 2,
+              borderDash: [4,3],
+              pointRadius: 3,
+              pointBackgroundColor: 'rgba(59,130,246,0.8)',
+              tension: 0.4,
+              fill: true,
+              order: 1
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: 'rgba(13,22,38,0.95)',
+              titleColor: '#f59e0b',
+              bodyColor: '#94a3b8',
+              borderColor: 'rgba(245,158,11,0.3)',
+              borderWidth: 1,
+              padding: 12,
+              callbacks: {
+                label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} kWh`
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#64748b', font: { size: 11 }, maxRotation: 0 }
+            },
+            y: {
+              grid: { color: 'rgba(255,255,255,0.04)' },
+              ticks: { color: '#64748b', font: { size: 11 }, callback: v => v + ' kWh' },
+              beginAtZero: false
+            }
+          }
+        }
+      });
+    }
+
+    /* ═══════════════════ MONTHLY DOUGHNUT ═══════════════════ */
+    function initMonthlyChart() {
+      const ctx2 = document.getElementById('monthly-chart')?.getContext('2d');
+      if (!ctx2) return;
+      new Chart(ctx2, {
+        type: 'doughnut',
+        data: {
+          labels: ['Generated', 'Remaining potential'],
+          datasets: [{
+            data: [186, 54],
+            backgroundColor: ['rgba(245,158,11,0.85)', 'rgba(255,255,255,0.07)'],
+            borderWidth: 0,
+            hoverBorderWidth: 2,
+            hoverBorderColor: ['rgba(245,158,11,1)', 'rgba(255,255,255,0.15)']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '74%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { color: '#94a3b8', font: { size: 11 }, padding: 16, usePointStyle: true, pointStyleWidth: 10 }
+            },
+            tooltip: {
+              backgroundColor: 'rgba(13,22,38,0.95)',
+              titleColor: '#f59e0b',
+              bodyColor: '#94a3b8',
+              callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} kWh` }
+            }
+          }
+        }
+      });
+    }
+
+    /* ═══════════════════ WEATHER LOADER ═══════════════════ */
+    async function loadWeather(user) {
+      const lat = user?.lat || 28.6139;
+      const lon = user?.lon || 77.2090;
+      const city = user?.city || 'New Delhi';
+
+      document.getElementById('weather-loading').style.display = 'flex';
+      document.getElementById('weather-content').classList.remove('loaded');
+      document.getElementById('weather-error').style.display = 'none';
+      document.getElementById('weather-location-badge').textContent = '📍 ' + city;
+
+      const data = await SYD.WeatherManager.fetch(lat, lon);
+      document.getElementById('weather-loading').style.display = 'none';
+
+      if (!data) {
+        document.getElementById('weather-error').style.display = 'block';
+        return;
+      }
+
+      const cur  = data.current;
+      const info = SYD.WeatherManager.getInfo(cur.weather_code);
+
+      document.getElementById('weather-icon').textContent      = info.icon;
+      document.getElementById('weather-temp').textContent      = Math.round(cur.temperature_2m) + '°C';
+      document.getElementById('weather-desc').textContent      = info.desc;
+      document.getElementById('weather-loc-text').textContent  = '📍 ' + city;
+      document.getElementById('weather-wind').textContent      = Math.round(cur.wind_speed_10m) + ' km/h';
+      document.getElementById('weather-humidity').textContent  = cur.relative_humidity_2m + '%';
+      document.getElementById('weather-cloud').textContent     = cur.cloud_cover + '%';
+      document.getElementById('weather-rain').textContent      = cur.precipitation.toFixed(1) + ' mm';
+
+      /* Forecast strip */
+      const daily = data.daily;
+      const strip = document.getElementById('forecast-strip');
+      strip.innerHTML = '';
+      const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      daily.time.forEach((date, i) => {
+        if (i === 0) return;
+        const d  = new Date(date);
+        const di = SYD.WeatherManager.getInfo(daily.weather_code[i]);
+        strip.innerHTML += `<div class="forecast-day">
+          <div class="forecast-day-name">${days[d.getDay()]}</div>
+          <div class="forecast-day-icon">${di.icon}</div>
+          <div class="forecast-day-hi">${Math.round(daily.temperature_2m_max[i])}°</div>
+          <div class="forecast-day-lo">${Math.round(daily.temperature_2m_min[i])}°</div>
+          <div class="forecast-day-rain">${daily.precipitation_sum[i].toFixed(1)}mm</div>
+        </div>`;
+      });
+
+      document.getElementById('weather-content').classList.add('loaded');
+
+      /* Wash alert logic */
+      if (SYD.WeatherManager.shouldShowWashAlert(data)) {
+        document.getElementById('wash-alert')?.classList.remove('hidden');
+      }
+
+      /* Simulate yield from cloud cover */
+      const cloudFactor  = 1 - (cur.cloud_cover / 100) * 0.7;
+      const maxKw        = parseFloat(user?.panelSize || 5);
+      const hour         = new Date().getHours();
+      const solarHourFac = Math.max(0, Math.sin(Math.PI * (hour - 6) / 12));
+      const yield_kw     = (maxKw * cloudFactor * solarHourFac * 0.85).toFixed(2);
+      document.getElementById('current-yield').textContent = yield_kw + ' kW';
+    }
+
+    function retryWeather() {
+      const user = SYD.AuthManager.getUser();
+      loadWeather(user);
+    }
+
+    /* ═══════════════════ ENERGY BARS ANIMATE ═══════════════════ */
+    function animateEnergyBars() {
+      document.querySelectorAll('.energy-bar-fill').forEach(bar => {
+        const target = bar.dataset.width || '0';
+        setTimeout(() => { bar.style.width = target + '%'; }, 400);
+      });
+    }
+
+    /* ═══════════════════ MAIN INIT ═══════════════════ */
+    document.addEventListener('DOMContentLoaded', async () => {
+      const user = SYD.AuthManager.getUser();
+
+      initSavings(user || {});
+      animateEfficiencyBar(91);
+      updateYieldChart(7);
+      initMonthlyChart();
+      animateEnergyBars();
+
+      await loadWeather(user || {});
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar Irradiance — Solar Yield Detector</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* ── Irradiance card colours ── */
+    .irradiance-card { position:relative; overflow:hidden; display:flex; flex-direction:column; gap:0.5rem; padding:1.5rem; border-radius:var(--radius-lg); border:1px solid var(--border); background:var(--bg-card); transition:transform 0.25s, box-shadow 0.25s; }
+    .irradiance-card:hover { transform:translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.35); }
+    .irradiance-card::before { content:''; position:absolute; inset:0; border-radius:inherit; opacity:0.06; pointer-events:none; }
+    .irradiance-card.ghi::before { background:linear-gradient(135deg,#f59e0b,#fbbf24); }
+    .irradiance-card.dni::before { background:linear-gradient(135deg,#3b82f6,#60a5fa); }
+    .irradiance-card.dhi::before { background:linear-gradient(135deg,#10b981,#34d399); }
+    .irr-icon { font-size:2rem; margin-bottom:0.25rem; }
+    .irr-label { font-size:0.72rem; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); }
+    .irr-value { font-family:var(--font-heading); font-size:2.6rem; font-weight:800; line-height:1; }
+    .ghi .irr-value { color:#f59e0b; }
+    .dni .irr-value { color:#3b82f6; }
+    .dhi .irr-value { color:#10b981; }
+    .irr-unit { font-size:0.78rem; color:var(--text-muted); }
+    .irr-desc { font-size:0.8rem; color:var(--text-secondary); margin-top:0.25rem; }
+    /* ── Period toggle ── */
+    .period-toggle { display:flex; gap:0.5rem; flex-wrap:wrap; }
+    .period-btn { padding:0.35rem 1rem; border-radius:var(--radius); border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .period-btn.active { background:var(--solar); color:#0d1626; border-color:var(--solar); }
+    /* ── Data table ── */
+    .data-table { width:100%; border-collapse:collapse; font-size:0.85rem; }
+    .data-table th { padding:10px 14px; text-align:left; color:var(--text-muted); font-weight:600; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.07em; border-bottom:1px solid var(--border); }
+    .data-table td { padding:10px 14px; color:var(--text-secondary); border-bottom:1px solid var(--border); }
+    .data-table tr:hover td { background:var(--bg-secondary); }
+    .data-table tr:last-child td { border-bottom:none; }
+    /* ── weather cards ── */
+    .weather-mini { display:flex; justify-content:space-between; align-items:center; padding:0.75rem 1rem; border-radius:var(--radius); background:var(--bg-secondary); }
+    .weather-mini-label { font-size:0.78rem; color:var(--text-muted); }
+    .weather-mini-value { font-size:1.1rem; font-weight:700; color:var(--text-primary); }
+    /* ── input row ── */
+    .input-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+    .input-row input { flex:1; min-width:220px; }
+    /* ── skeleton loading ── */
+    @keyframes shimmer { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+    .skeleton { border-radius:6px; background:linear-gradient(90deg,var(--bg-secondary) 25%,var(--bg-tertiary,#1e2d42) 50%,var(--bg-secondary) 75%); background-size:800px 100%; animation:shimmer 1.6s infinite; }
+    /* ── hint text ── */
+    .hint-text { font-size:0.78rem; color:var(--text-muted); margin-top:0.5rem; display:flex; align-items:center; gap:0.4rem; }
+    .location-display { font-size:0.85rem; color:var(--text-secondary); margin-top:0.75rem; display:flex; align-items:center; gap:0.4rem; }
+    .location-display span { color:var(--solar); font-weight:600; }
+    /* ── chart card extras ── */
+    .chart-header { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.75rem; margin-bottom:1.25rem; }
+    .chart-title { font-family:var(--font-heading); font-size:1.1rem; font-weight:700; color:var(--text-primary); }
+    .chart-subtitle { font-size:0.8rem; color:var(--text-muted); margin-top:0.2rem; }
+    /* ── text helpers ── */
+    .text-solar { color:#f59e0b !important; }
+    .text-blue  { color:#3b82f6 !important; }
+    .text-green { color:#10b981 !important; }
+    .fw-700 { font-weight:700; }
+    /* ── spinner ── */
+    .spinner { display:inline-block; width:14px; height:14px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 0.7s linear infinite; vertical-align:middle; margin-right:6px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    /* ── loading overlay ── */
+    #page-loading { display:none; position:fixed; inset:0; z-index:9000; background:rgba(13,22,38,0.7); backdrop-filter:blur(4px); align-items:center; justify-content:center; flex-direction:column; gap:1rem; }
+    #page-loading.visible { display:flex; }
+    .loading-logo { font-size:3rem; animation:pulseGlow 1.5s ease-in-out infinite; }
+    @keyframes pulseGlow { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.9)} }
+    .loading-text { color:var(--text-secondary); font-size:0.9rem; }
+  </style>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="page-loading">
+  <div class="loading-logo">☀️</div>
+  <div class="loading-text">Fetching NASA POWER data…</div>
+</div>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">☀️</div>
+    <span class="sidebar-brand">Solar Yield</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">Main</div>
+    <a href="dashboard.html" class="nav-item"><span class="nav-icon">🏠</span><span class="nav-label">Dashboard</span></a>
+    <a href="irradiance.html" class="nav-item active"><span class="nav-icon">☀️</span><span class="nav-label">Irradiance</span></a>
+    <a href="ml-prediction.html" class="nav-item"><span class="nav-icon">🤖</span><span class="nav-label">ML Prediction</span></a>
+    <a href="roi-calculator.html" class="nav-item"><span class="nav-icon">💰</span><span class="nav-label">ROI Calculator</span></a>
+    <div class="nav-section-label">Help</div>
+    <a href="faq.html" class="nav-item"><span class="nav-icon">❓</span><span class="nav-label">FAQs</span></a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-collapse-btn nav-item" onclick="void(0)">
+      <span class="nav-icon collapse-icon">‹</span>
+      <span class="nav-label">Collapse</span>
+    </button>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- ═══════════════════════ MAIN WRAPPER ═══════════════════════ -->
+<div class="main-content">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="topbar-hamburger" id="topbar-hamburger">☰</button>
+    <span class="topbar-title">Solar Irradiance</span>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-actions">
+      <div class="topbar-location user-location-display">📍 Location</div>
+      <button class="theme-toggle" data-theme-toggle>
+        <div class="theme-toggle-track"><div class="theme-toggle-thumb"></div></div>
+        <span class="theme-icon theme-icon-moon">🌙</span>
+        <span class="theme-icon theme-icon-sun" style="display:none">☀️</span>
+      </button>
+      <div class="user-avatar" id="topbar-avatar" title="Profile">U</div>
+    </div>
+  </div>
+
+  <!-- PAGE CONTENT -->
+  <main class="page-content">
+
+    <!-- ── A. INPUT SECTION ── -->
+    <div class="card" style="margin-bottom:1.5rem;">
+      <h2 style="font-family:var(--font-heading);font-size:1.35rem;font-weight:800;margin-bottom:0.4rem;color:var(--text-primary);">
+        🛰️ Get Solar Irradiance for Your Location
+      </h2>
+      <p style="color:var(--text-secondary);font-size:0.88rem;margin-bottom:1.25rem;">
+        Enter your ZIP/Pincode or use GPS to fetch real-time NASA POWER solar radiation data for your exact coordinates.
+      </p>
+      <div class="input-row">
+        <input
+          class="form-input"
+          type="text"
+          id="pincode-input"
+          placeholder="Enter PIN code, city name, or coordinates (lat,lon)"
+          style="flex:1;min-width:260px;"
+        />
+        <button class="btn btn-ghost" id="gps-btn" style="white-space:nowrap;">📡 Use GPS</button>
+        <button class="btn btn-primary" id="fetch-btn" style="white-space:nowrap;">🔍 Fetch Data</button>
+      </div>
+      <div class="hint-text">
+        🌐 Data sourced from <strong style="color:var(--solar)">NASA POWER API</strong> — no API key required. Coverage: global, updated monthly.
+      </div>
+      <div class="location-display">
+        📍 Showing data for: <span id="location-display">—</span>
+      </div>
+    </div>
+
+    <!-- ── B. IRRADIANCE SUMMARY CARDS ── -->
+    <div class="grid grid-3" id="irradiance-cards" style="margin-bottom:1.5rem;">
+      <!-- GHI -->
+      <div class="irradiance-card ghi">
+        <div class="irr-icon">☀️</div>
+        <div class="irr-label">GHI — Global Horizontal</div>
+        <div class="irr-value" id="ghi-val">—</div>
+        <div class="irr-unit">kWh/m²/day</div>
+        <div class="irr-desc">Total solar radiation received on a horizontal surface from all directions</div>
+      </div>
+      <!-- DNI -->
+      <div class="irradiance-card dni">
+        <div class="irr-icon">📡</div>
+        <div class="irr-label">DNI — Direct Normal</div>
+        <div class="irr-value" id="dni-val">—</div>
+        <div class="irr-unit">kWh/m²/day</div>
+        <div class="irr-desc">Direct beam radiation received perpendicular to the sun's direction</div>
+      </div>
+      <!-- DHI -->
+      <div class="irradiance-card dhi">
+        <div class="irr-icon">🌤️</div>
+        <div class="irr-label">DHI — Diffuse Horizontal</div>
+        <div class="irr-value" id="dhi-val">—</div>
+        <div class="irr-unit">kWh/m²/day</div>
+        <div class="irr-desc">Scattered radiation received from the entire sky dome (clouds + atmosphere)</div>
+      </div>
+    </div>
+
+    <!-- ── C. 12-MONTH CHART ── -->
+    <div class="card chart-card" style="margin-bottom:1.5rem;">
+      <div class="chart-header">
+        <div>
+          <div class="chart-title">📈 Monthly Solar Irradiance (Past Year)</div>
+          <div class="chart-subtitle">All values in kWh/m²/day · Source: NASA POWER RE Community</div>
+        </div>
+        <div class="period-toggle">
+          <button class="period-btn active" data-series="all">All</button>
+          <button class="period-btn" data-series="ghi">GHI</button>
+          <button class="period-btn" data-series="dni">DNI</button>
+          <button class="period-btn" data-series="dhi">DHI</button>
+        </div>
+      </div>
+      <div class="chart-container" style="height:320px;">
+        <canvas id="irradiance-chart"></canvas>
+      </div>
+    </div>
+
+    <!-- ── D. ADDITIONAL DATA CARDS ── -->
+    <div class="grid grid-2" style="margin-bottom:1.5rem;">
+      <!-- Temperature -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+          <span style="font-size:1.5rem;">🌡️</span>
+          <div>
+            <div style="font-family:var(--font-heading);font-size:1rem;font-weight:700;color:var(--text-primary);">Temperature</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Ambient 2m temperature (NASA T2M)</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Average</span>
+            <span class="weather-mini-value text-solar" id="temp-avg">—°C</span>
+          </div>
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Min</span>
+            <span class="weather-mini-value" id="temp-min" style="color:#60a5fa;">—°C</span>
+          </div>
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Max</span>
+            <span class="weather-mini-value" id="temp-max" style="color:#f87171;">—°C</span>
+          </div>
+        </div>
+        <div style="margin-top:1rem;padding:0.6rem 0.9rem;border-radius:var(--radius);background:rgba(245,158,11,0.07);font-size:0.8rem;color:var(--text-secondary);">
+          ⚡ Panels lose ~0.4% efficiency per °C above 25°C. Optimal range: 15–25°C.
+        </div>
+      </div>
+      <!-- Wind -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+          <span style="font-size:1.5rem;">💨</span>
+          <div>
+            <div style="font-family:var(--font-heading);font-size:1rem;font-weight:700;color:var(--text-primary);">Wind Speed</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">10m wind speed (NASA WS10M)</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;">
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Average</span>
+            <span class="weather-mini-value text-blue" id="wind-avg">— m/s</span>
+          </div>
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Max</span>
+            <span class="weather-mini-value" id="wind-max" style="color:#a78bfa;">— m/s</span>
+          </div>
+          <div class="weather-mini" style="flex-direction:column;align-items:flex-start;gap:0.2rem;">
+            <span class="weather-mini-label">Calm Days</span>
+            <span class="weather-mini-value text-green" id="wind-calm">—</span>
+          </div>
+        </div>
+        <div style="margin-top:1rem;padding:0.6rem 0.9rem;border-radius:var(--radius);background:rgba(59,130,246,0.07);font-size:0.8rem;color:var(--text-secondary);">
+          🌬️ Moderate wind helps cool panels and may improve efficiency by 1–3%.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── E. DATA TABLE ── -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem;">
+        <div>
+          <div style="font-family:var(--font-heading);font-size:1.1rem;font-weight:700;color:var(--text-primary);">📋 Monthly Breakdown</div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.2rem;">12-month radiation and yield data for your location</div>
+        </div>
+        <button class="btn btn-ghost" id="export-btn" style="font-size:0.8rem;">⬇️ Export CSV</button>
+      </div>
+      <div style="overflow-x:auto;border-radius:var(--radius);border:1px solid var(--border);">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>GHI (kWh/m²/d)</th>
+              <th>DNI (kWh/m²/d)</th>
+              <th>DHI (kWh/m²/d)</th>
+              <th>Avg Temp</th>
+              <th>Expected Yield</th>
+            </tr>
+          </thead>
+          <tbody id="irradiance-table">
+            <!-- filled by JS -->
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Fetch data to see monthly breakdown</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════ CHATBOT ═══════════════════════ -->
+<button class="chatbot-trigger" id="chatbot-trigger" title="Chat with SolarBot">💬</button>
+<div class="chatbot-panel" id="chatbot-panel">
+  <div class="chatbot-header">
+    <div class="chatbot-avatar">☀️</div>
+    <div class="chatbot-header-info">
+      <div class="chatbot-header-name">SolarBot</div>
+      <div class="chatbot-header-status">Online — Ready to help</div>
+    </div>
+    <button class="chatbot-close" id="chatbot-close">✕</button>
+  </div>
+  <div class="chatbot-messages" id="chatbot-messages"></div>
+  <div class="chatbot-quick-replies">
+    <button class="quick-reply-btn" data-msg="Why is my yield low?">Yield drop?</button>
+    <button class="quick-reply-btn" data-msg="Should I clean my panels?">Clean panels?</button>
+    <button class="quick-reply-btn" data-msg="Show my ROI">My ROI</button>
+    <button class="quick-reply-btn" data-msg="Weather impact on yield">Weather impact</button>
+  </div>
+  <div class="chatbot-input-row">
+    <input class="chatbot-input" id="chatbot-input" type="text" placeholder="Ask SolarBot anything..." />
+    <button class="chatbot-send" id="chatbot-send">➤</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SCRIPTS ═══════════════════════ -->
+<script src="app.js"></script>
+<script>
+'use strict';
+
+/* ── Auth Guard ── */
+SYD.AuthManager.requireAuth();
+
+/* ── State ── */
+let _ghiData = [], _dniData = [], _dhiData = [], _tempData = [], _windData = [], _monthLabels = [];
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/* ── Loading helpers ── */
+function showLoading() { document.getElementById('page-loading').classList.add('visible'); }
+function hideLoading() { document.getElementById('page-loading').classList.remove('visible'); }
+
+/* ── Geocoding: pincode → lat/lon via Nominatim ── */
+async function resolveLocation(query) {
+  const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`;
+  try {
+    const res = await fetch(url, { headers:{ 'Accept-Language':'en' } });
+    const data = await res.json();
+    if (data && data[0]) return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon), display: data[0].display_name.split(',').slice(0,3).join(', ') };
+  } catch(e) {}
+  return null;
+}
+
+/* ── NASA POWER API ── */
+async function fetchNASAData(lat, lon, locationLabel) {
+  showLoading();
+  document.getElementById('location-display').textContent = locationLabel || `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+  document.querySelectorAll('.topbar-location').forEach(el => el.textContent = '📍 ' + (locationLabel || `${lat.toFixed(2)}°N`));
+
+  // NASA POWER monthly endpoint uses YYYY format only.
+  // It rejects requests where 'end' is the current calendar year (incomplete year = 422).
+  // Solution: always request the last two COMPLETED years.
+  const currentYear = new Date().getFullYear();
+  const endYear     = currentYear - 1;   // last fully available year
+  const startYear   = endYear - 1;       // year before that → 24 months of data
+
+  const params = 'ALLSKY_SFC_SW_DWN,CLRSKY_SFC_SW_DWN,T2M,WS10M';
+  const url = `https://power.larc.nasa.gov/api/temporal/monthly/point?parameters=${params}&community=RE&longitude=${lon}&latitude=${lat}&start=${startYear}&end=${endYear}&format=JSON`;
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status} — ${body.slice(0, 120)}`);
+    }
+    const data = await res.json();
+    if (data.errors && Object.keys(data.errors).length > 0) {
+      throw new Error('NASA errors: ' + JSON.stringify(data.errors).slice(0, 120));
+    }
+    renderIrradianceData(data, lat, lon);
+  } catch(e) {
+    console.warn('NASA API failed, using estimated fallback. Reason:', e.message);
+    SYD.Toast && SYD.Toast.show('Live NASA data unavailable — showing location-based estimates.', 'warning');
+    renderFallbackData(lat, lon);
+  }
+  hideLoading();
+}
+
+
+function renderIrradianceData(data, lat, lon) {
+  const props = data.properties?.parameter;
+  if (!props) { renderFallbackData(lat, lon); return; }
+
+  // Filter YYYYMM keys (6 chars)
+  const months = Object.keys(props.ALLSKY_SFC_SW_DWN || {}).filter(k => k.length === 6 && !k.endsWith('13'));
+  months.sort();
+  const last12 = months.slice(-12);
+
+  const ghi   = last12.map(m => Math.max(0, parseFloat((props.ALLSKY_SFC_SW_DWN[m] || 0).toFixed(2))));
+  const clrsky= last12.map(m => Math.max(0, parseFloat((props.CLRSKY_SFC_SW_DWN?.[m] || 0).toFixed(2))));
+  const t2m   = last12.map(m => parseFloat((props.T2M?.[m] || 0).toFixed(1)));
+  const ws    = last12.map(m => parseFloat((props.WS10M?.[m] || 0).toFixed(2)));
+
+  // Derive labels from YYYYMM keys
+  const labels = last12.map(m => MONTH_NAMES[parseInt(m.slice(4,6),10)-1]);
+
+  _ghiData = ghi; _dniData = ghi.map(v=>(v*0.72).toFixed(2)).map(Number);
+  _dhiData = ghi.map(v=>(v*0.28).toFixed(2)).map(Number);
+  _tempData = t2m; _windData = ws; _monthLabels = labels;
+
+  updateSummaryCards(); updateWeatherCards();
+  renderIrradianceChart(labels, _ghiData, _dniData, _dhiData);
+  renderTable(labels, _ghiData, _dniData, _dhiData, _tempData, _windData);
+}
+
+function renderFallbackData(lat, lon) {
+  const baseGHI = Math.max(2, 6.5 - Math.abs(lat - 20) * 0.08);
+  const seasonal = [0.75,0.85,1.0,1.1,1.15,0.95,0.8,0.8,0.9,1.0,0.85,0.72];
+  const ghi  = seasonal.map(s => parseFloat((baseGHI * s + (Math.random()-0.5)*0.3).toFixed(2)));
+  const dni  = ghi.map(v => parseFloat((v*0.72).toFixed(2)));
+  const dhi  = ghi.map(v => parseFloat((v*0.28).toFixed(2)));
+  const temp = seasonal.map(s => parseFloat((20 + s*8 - (Math.random()*2)).toFixed(1)));
+  const wind = seasonal.map(() => parseFloat((3 + Math.random()*4).toFixed(2)));
+
+  _ghiData = ghi; _dniData = dni; _dhiData = dhi;
+  _tempData = temp; _windData = wind; _monthLabels = MONTH_NAMES;
+
+  updateSummaryCards(); updateWeatherCards();
+  renderIrradianceChart(MONTH_NAMES, ghi, dni, dhi);
+  renderTable(MONTH_NAMES, ghi, dni, dhi, temp, wind);
+}
+
+function updateSummaryCards() {
+  const mo = new Date().getMonth();
+  document.getElementById('ghi-val').textContent = (_ghiData[mo] || _ghiData[_ghiData.length-1] || 0).toFixed(2);
+  document.getElementById('dni-val').textContent = (_dniData[mo] || _dniData[_dniData.length-1] || 0).toFixed(2);
+  document.getElementById('dhi-val').textContent = (_dhiData[mo] || _dhiData[_dhiData.length-1] || 0).toFixed(2);
+}
+
+function updateWeatherCards() {
+  if (!_tempData.length) return;
+  const avg = arr => (arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1);
+  document.getElementById('temp-avg').textContent = avg(_tempData) + '°C';
+  document.getElementById('temp-min').textContent = Math.min(..._tempData).toFixed(1) + '°C';
+  document.getElementById('temp-max').textContent = Math.max(..._tempData).toFixed(1) + '°C';
+  document.getElementById('wind-avg').textContent = avg(_windData) + ' m/s';
+  document.getElementById('wind-max').textContent = Math.max(..._windData).toFixed(2) + ' m/s';
+  const calm = _windData.filter(v => v < 3).length;
+  document.getElementById('wind-calm').textContent = calm + ' mo.';
+}
+
+/* ── Chart ── */
+function renderIrradianceChart(labels, ghi, dni, dhi) {
+  const ctx = document.getElementById('irradiance-chart')?.getContext('2d');
+  if (!ctx) return;
+  if (window._irradianceChart) window._irradianceChart.destroy();
+
+  window._irradianceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {
+          label:'GHI', data:ghi,
+          borderColor:'rgba(245,158,11,1)', backgroundColor:'rgba(245,158,11,0.12)',
+          borderWidth:2.5, tension:0.4, fill:true,
+          pointRadius:4, pointHoverRadius:7, pointBackgroundColor:'rgba(245,158,11,1)',
+          pointBorderColor:'#0d1626', pointBorderWidth:2
+        },
+        {
+          label:'DNI', data:dni,
+          borderColor:'rgba(59,130,246,1)', backgroundColor:'rgba(59,130,246,0.05)',
+          borderWidth:2, tension:0.4, fill:false,
+          pointRadius:3, pointHoverRadius:6, pointBackgroundColor:'rgba(59,130,246,1)'
+        },
+        {
+          label:'DHI', data:dhi,
+          borderColor:'rgba(16,185,129,1)', backgroundColor:'rgba(16,185,129,0.05)',
+          borderWidth:2, tension:0.4, fill:false,
+          pointRadius:3, pointHoverRadius:6, pointBackgroundColor:'rgba(16,185,129,1)'
+        }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:false,
+      interaction:{ mode:'index', intersect:false },
+      plugins: {
+        legend:{ labels:{ color:'#94a3b8', font:{size:12}, usePointStyle:true, pointStyleWidth:10 } },
+        tooltip:{
+          backgroundColor:'rgba(13,22,38,0.95)', titleColor:'#f59e0b',
+          bodyColor:'#94a3b8', borderColor:'rgba(245,158,11,0.3)', borderWidth:1,
+          callbacks:{ label: c => ` ${c.dataset.label}: ${Number(c.raw).toFixed(2)} kWh/m²/d` }
+        }
+      },
+      scales: {
+        x:{ grid:{color:'rgba(255,255,255,0.05)'}, ticks:{color:'#64748b'} },
+        y:{
+          grid:{color:'rgba(255,255,255,0.05)'},
+          ticks:{color:'#64748b', callback:v=>v.toFixed(1)},
+          title:{display:true,text:'kWh/m²/day',color:'#64748b',font:{size:11}}
+        }
+      }
+    }
+  });
+}
+
+/* ── Table ── */
+function renderTable(months, ghi, dni, dhi, temp, wind) {
+  let user = null;
+  try { user = SYD.AuthManager.getUser(); } catch(e) {}
+  const panelKw = parseFloat(user?.panelSize || user?.systemSize || 5);
+  const tbody = document.getElementById('irradiance-table');
+  if (!tbody) return;
+
+  tbody.innerHTML = months.map((m, i) => {
+    const g = (ghi[i]||0), d = (dni[i]||0), h = (dhi[i]||0);
+    const expectedKwh = (panelKw * g * 30 * 0.8).toFixed(0);
+    const isCurrentMonth = i === new Date().getMonth();
+    return `<tr${isCurrentMonth ? ' style="background:rgba(245,158,11,0.05);"' : ''}>
+      <td style="font-weight:${isCurrentMonth?'700':'400'};color:${isCurrentMonth?'var(--solar)':'var(--text-secondary)'};">${m}${isCurrentMonth?' ◀':''}</td>
+      <td class="text-solar fw-700">${g.toFixed(2)}</td>
+      <td class="text-blue">${d.toFixed(2)}</td>
+      <td class="text-green">${h.toFixed(2)}</td>
+      <td>${(temp[i]||0).toFixed(1)}°C</td>
+      <td class="fw-700">${Number(expectedKwh).toLocaleString('en-IN')} kWh</td>
+    </tr>`;
+  }).join('');
+}
+
+/* ── Period toggle ── */
+document.querySelectorAll('.period-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const series = btn.dataset.series;
+    if (!_irradianceChart || !window._irradianceChart) return;
+    const chart = window._irradianceChart;
+    chart.data.datasets.forEach((ds, i) => {
+      ds.hidden = series === 'all' ? false :
+        (series === 'ghi' && i !== 0) || (series === 'dni' && i !== 1) || (series === 'dhi' && i !== 2);
+    });
+    chart.update();
+  });
+});
+
+/* ── GPS Button ── */
+document.getElementById('gps-btn').addEventListener('click', () => {
+  if (!navigator.geolocation) { alert('Geolocation not supported by your browser.'); return; }
+  const btn = document.getElementById('gps-btn');
+  btn.innerHTML = '<span class="spinner"></span> Locating…';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      btn.innerHTML = '📡 Use GPS';
+      btn.disabled = false;
+      const { latitude: lat, longitude: lon } = pos.coords;
+      document.getElementById('pincode-input').value = `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
+      fetchNASAData(lat, lon, `${lat.toFixed(3)}° N, ${lon.toFixed(3)}° E`);
+    },
+    err => {
+      btn.innerHTML = '📡 Use GPS';
+      btn.disabled = false;
+      alert('Could not get GPS location: ' + err.message);
+    },
+    { timeout:10000 }
+  );
+});
+
+/* ── Fetch Button ── */
+document.getElementById('fetch-btn').addEventListener('click', async () => {
+  const val = document.getElementById('pincode-input').value.trim();
+  if (!val) { SYD.Toast && SYD.Toast.show('Please enter a location.', 'warning'); return; }
+
+  // Check if it's coords
+  const coordMatch = val.match(/^(-?\d+\.?\d*)[,\s]+(-?\d+\.?\d*)$/);
+  if (coordMatch) {
+    const lat = parseFloat(coordMatch[1]), lon = parseFloat(coordMatch[2]);
+    fetchNASAData(lat, lon, `${lat.toFixed(3)}°, ${lon.toFixed(3)}°`);
+    return;
+  }
+
+  showLoading();
+  const result = await resolveLocation(val);
+  hideLoading();
+  if (result) {
+    fetchNASAData(result.lat, result.lon, result.display);
+  } else {
+    SYD.Toast && SYD.Toast.show('Could not find that location. Try coordinates.', 'error');
+  }
+});
+
+/* ── Export CSV ── */
+document.getElementById('export-btn').addEventListener('click', () => {
+  if (!_monthLabels.length) return;
+  const headers = ['Month','GHI','DNI','DHI','Avg Temp (°C)','Expected Yield (kWh)'];
+  const user = (() => { try { return SYD.AuthManager.getUser(); } catch(e){return null;} })();
+  const kw = parseFloat(user?.panelSize || 5);
+  const rows = _monthLabels.map((m,i) => [
+    m,
+    (_ghiData[i]||0).toFixed(2), (_dniData[i]||0).toFixed(2), (_dhiData[i]||0).toFixed(2),
+    (_tempData[i]||0).toFixed(1),
+    (kw * (_ghiData[i]||0) * 30 * 0.8).toFixed(0)
+  ]);
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'solar_irradiance.csv';
+  a.click();
+});
+
+/* ── Auto-load from saved user data ── */
+window.addEventListener('DOMContentLoaded', () => {
+  let user = null;
+  try { user = SYD.AuthManager.getUser(); } catch(e) {}
+
+  // Set avatar
+  const av = document.getElementById('topbar-avatar');
+  if (av && user?.name) av.textContent = user.name.charAt(0).toUpperCase();
+
+  const lat = parseFloat(user?.lat || user?.latitude || 20.5937);
+  const lon = parseFloat(user?.lon || user?.longitude || 78.9629);
+  const label = user?.location || user?.city || `${lat.toFixed(3)}° N, ${lon.toFixed(3)}° E`;
+
+  fetchNASAData(lat, lon, label);
+});
+
+/* ── Init SYD modules ── */
+try { SYD.ThemeManager.init(); } catch(e) {}
+try { SYD.Chatbot.init(); } catch(e) {}
+</script>
+</body>
+</html>
